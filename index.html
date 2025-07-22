@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DailyDrop - Professional Slide Editor</title>
+    <meta name="description" content="Professional TikTok slide editor for creating stunning vertical content with text overlays">
+    <meta name="keywords" content="TikTok, slide editor, video content, text overlay, DailyDrop">
+    <meta name="author" content="DailyDrop">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzNiODJmNiIvPgo8cGF0aCBkPSJNOCA3SDE2VjI1SDhWN1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xOCA3SDI0VjEzSDE4VjdaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTggMTlIMjRWMjVIMThWMTlaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K">
+    
+    <!-- External Resources -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js" integrity="sha512-xQBQYt9UcgblF6aCMrwU1NkVA7HCXaSN2oitV1odKkmnj7V8Vm1Dq9OdJWCGNVAXxULfhcIDyO7uQhONlYOk5Q==" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #8b5cf6;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .glass-card {
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* DYNAMIC CANVAS - NO MORE CROPPING OR BLACK BARS! */
+        #canvas-container { 
+            position: relative; 
+            margin: 0 auto; 
+            overflow: hidden; 
+            width: 100%;
+            max-width: 540px;
+            background: transparent;
+            border-radius: 16px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        canvas { 
+            width: 100%;
+            height: auto;
+            max-height: 960px;
+            display: block; 
+            border-radius: 16px;
+            border: none;
+            background-color: transparent;
+        }
+
+        .control-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .control-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        #file-input { display: none; }
+
+        #file-drop-area { 
+            border: 2px dashed var(--accent-primary); 
+            border-radius: 12px; 
+            padding: 40px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+            margin-bottom: 1.5rem;
+        }
+
+        #file-drop-area:hover { 
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border-color: var(--accent-secondary);
+            transform: scale(1.02);
+        }
+
+        #file-drop-area.drag-over {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border-color: var(--success);
+            transform: scale(1.05);
+        }
+
+        .image-thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border: 2px solid transparent;
+            cursor: move;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .image-thumbnail:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .image-thumbnail.active {
+            border-color: var(--success);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+        }
+
+        .text-element-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+        }
+
+        .text-element-item:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+        }
+
+        .text-element-item.live-editing {
+            border: 2px solid var(--success);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        #text-content.live {
+            border-color: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .slide-group {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .slide-group.active {
+            border-color: var(--accent-primary);
+            background: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .slide-group.drag-over {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .unassigned-images {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+            border: 2px dashed var(--warning);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-secondary);
+            border-color: var(--accent-primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-success:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .input-field {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-secondary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            cursor: pointer;
+            border: none;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .preset-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .brand-text {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .live-indicator {
+            background: linear-gradient(135deg, var(--success), #059669);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 16px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .section-header {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: #6ee7b7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .brand-text {
+                font-size: 1.5rem;
+            }
+
+            .control-card {
+                padding: 16px;
+            }
+
+            #canvas-container {
+                max-width: 100%;
+                min-height: 300px;
+            }
+
+            .preset-buttons {
+                justify-content: center;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .control-card {
+                border: 1px solid #ccc;
+                background: white;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High Contrast Mode */
+        @media (prefers-contrast: high) {
+            :root {
+                --border-color: #ffffff;
+                --text-primary: #ffffff;
+                --bg-primary: #000000;
+                --bg-secondary: #111111;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <!-- Header with DailyDrop Branding -->
+        <header class="header-brand">
+            <div>
+                <h1 class="brand-text">DailyDrop</h1>
+                <p class="text-gray-400 text-sm font-medium">Professional Slide Editor</p>
+            </div>
+        </header>
+
+        <!-- Error/Success Messages -->
+        <div id="message-container"></div>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Upload Panel -->
+            <section class="control-card order-1">
+                <h2 class="section-header">📸 Upload & Organize</h2>
+                <div id="file-drop-area" class="mb-6" role="button" tabindex="0" aria-label="Upload images">
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">📁</div>
+                        <p class="text-gray-300 font-medium mb-1">Drag & drop images here</p>
+                        <p class="text-sm text-gray-500">or click to browse</p>
+                    </div>
+                    <input type="file" id="file-input" accept="image/*" multiple aria-label="Select image files">
+                </div>
+                
+                <!-- Unassigned Images -->
+                <div id="unassigned-section" class="unassigned-images mb-6" style="display: none;" role="region" aria-label="Unassigned images">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-semibold text-amber-300">📋 Unassigned Images</h3>
+                    </div>
+                    <div id="unassigned-images" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-gray-200">🎬 Slides</h3>
+                        <button id="create-slide-btn" class="btn-primary" aria-label="Create new slide">+ New Slide</button>
+                    </div>
+                    <div id="slides-container" class="space-y-4 max-h-96 overflow-y-auto" role="region" aria-label="Slides list">
+                        <p class="text-gray-500 text-center py-8">Create your first slide</p>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="canvas-bg" class="block text-sm font-medium text-gray-300 mb-2">Canvas Background:</label>
+                    <select id="canvas-bg" class="input-field w-full">
+                        <option value="#000000">Black</option>
+                        <option value="#ffffff">White</option>
+                        <option value="#f3f4f6">Light Gray</option>
+                        <option value="#1f2937">Dark Gray</option>
+                        <option value="#3b82f6">Blue</option>
+                        <option value="#ef4444">Red</option>
+                        <option value="#10b981">Green</option>
+                        <option value="#f59e0b">Orange</option>
+                    </select>
+                </div>
+                
+                <button id="export-all" class="btn-success w-full flex items-center justify-center gap-3" aria-label="Export all slides">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M9.293 13.293a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V4a1 1 0 10-2 0v6.586L7.707 8.707a1 1 0 00-1.414 1.414l3 3z" clip-rule="evenodd" />
+                    </svg>
+                    Export All Slides
+                </button>
+            </section>
+
+            <!-- Editor Panel -->
+            <section class="control-card order-3 lg:order-2">
+                <h2 class="section-header">🎨 Edit Image</h2>
+                <div class="mb-4 p-4 bg-blue-900/30 rounded-lg border border-blue-500/30">
+                    <div class="text-sm text-blue-200 font-medium" id="current-info">
+                        Select a slide and image to start editing
+                    </div>
+                </div>
+
+                <div id="canvas-container" class="mb-6" role="img" aria-label="Image editor canvas">
+                    <canvas id="editor-canvas" width="1080" height="1920" aria-label="Slide editing area"></canvas>
+                </div>
+                
+                <nav class="flex justify-between gap-4" aria-label="Image navigation">
+                    <button id="prev-image" class="btn-primary flex-1" aria-label="Previous image">← Prev Image</button>
+                    <button id="next-image" class="btn-primary flex-1" aria-label="Next image">Next Image →</button>
+                </nav>
+            </section>
+
+            <!-- Text Controls Panel -->
+            <section class="control-card order-2 lg:order-3">
+                <h2 class="section-header">✍️ Add Text</h2>
+                
+                <div id="live-editing-indicator" class="live-indicator hidden">
+                    <span>🎨 Live Editing Mode - Changes apply instantly!</span>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="text-content" class="block text-sm font-medium text-gray-300 mb-2">Text Content:</label>
+                    <textarea id="text-content" class="input-field w-full transition-all" rows="4" placeholder="Enter text for current image...&#10;Use Enter for new lines" aria-describedby="text-help"></textarea>
+                    <div id="text-help" class="text-xs text-gray-500 mt-1">Press Enter to create new lines</div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="font-size" class="block text-sm font-medium text-gray-300 mb-2">Font Size:</label>
+                        <input type="range" id="font-size" min="10" max="150" value="48" class="slider w-full" aria-describedby="font-size-value">
+                        <span id="font-size-value" class="text-sm text-gray-400">48px</span>
+                    </div>
+                    <div>
+                        <label for="line-height" class="block text-sm font-medium text-gray-300 mb-2">Line Height:</label>
+                        <input type="range" id="line-height" min="0.8" max="2.5" step="0.1" value="1.2" class="slider w-full" aria-describedby="line-height-value">
+                        <span id="line-height-value" class="text-sm text-gray-400">1.2x</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="vertical-adjust" class="block text-sm font-medium text-gray-300 mb-2">Vertical Position:</label>
+                    <div class="preset-buttons" role="group" aria-label="Position presets">
+                        <button class="preset-btn" data-position="350" aria-label="Top position">Top</button>
+                        <button class="preset-btn" data-position="680" aria-label="Middle position">Middle</button>
+                        <button class="preset-btn" data-position="1000" aria-label="Bottom position">Bottom</button>
+                    </div>
+                    <input type="range" id="vertical-adjust" min="0" max="1920" value="751" class="slider w-full" aria-describedby="vertical-value">
+                    <span id="vertical-value" class="text-sm text-gray-400">751px</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="text-opacity" class="block text-sm font-medium text-gray-300 mb-2">Opacity:</label>
+                        <input type="range" id="text-opacity" min="0" max="100" value="100" class="slider w-full" aria-describedby="opacity-value">
+                        <span id="opacity-value" class="text-sm text-gray-400">100%</span>
+                    </div>
+                    <div>
+                        <label for="outline-width" class="block text-sm font-medium text-gray-300 mb-2">Outline Width:</label>
+                        <input type="range" id="outline-width" min="0" max="20" value="7" class="slider w-full" aria-describedby="outline-value">
+                        <span id="outline-value" class="text-sm text-gray-400">7px</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="text-color" class="block text-sm font-medium text-gray-300 mb-2">Text Color:</label>
+                        <input type="color" id="text-color" value="#ffffff" class="input-field w-full h-12" aria-label="Text color picker">
+                    </div>
+                    <div>
+                        <label for="outline-color" class="block text-sm font-medium text-gray-300 mb-2">Outline Color:</label>
+                        <input type="color" id="outline-color" value="#000000" class="input-field w-full h-12" aria-label="Outline color picker">
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="font-family" class="block text-sm font-medium text-gray-300 mb-2">Font Family:</label>
+                    <select id="font-family" class="input-field w-full">
+                        <option value="Poppins">Poppins</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Helvetica">Helvetica</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Arial Black">Arial Black</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="text-align" class="block text-sm font-medium text-gray-300 mb-2">Text Alignment:</label>
+                        <select id="text-align" class="input-field w-full">
+                            <option value="left">Left</option>
+                            <option value="center" selected>Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="font-weight" class="block text-sm font-medium text-gray-300 mb-2">Font Weight:</label>
+                        <select id="font-weight" class="input-field w-full">
+                            <option value="400" selected>Normal</option>
+                            <option value="600">Semi Bold</option>
+                            <option value="700">Bold</option>
+                            <option value="900">Extra Bold</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mb-6">
+                    <button id="add-text" class="btn-primary flex-1">Add Text Layer</button>
+                    <button id="done-editing" class="btn-success flex-1 hidden">Done</button>
+                </div>
+                
+                <div id="text-elements-list" class="space-y-2 max-h-64 overflow-y-auto" role="region" aria-label="Text layers list">
+                    <p class="text-gray-500 text-center py-6">No text layers for current image</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Global error handling
+        window.addEventListener('error', function(e) {
+            console.error('Application error:', e.error);
+            showMessage('An unexpected error occurred. Please refresh the page if issues persist.', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            showMessage('An error occurred while processing. Please try again.', 'error');
+        });
+
+        // Application state
+        const canvas = document.getElementById('editor-canvas');
+        const ctx = canvas.getContext('2d');
+        let slides = [];
+        let unassignedImages = [];
+        let currentSlideIndex = null;
+        let currentImageIndex = null;
+        let selectedTextIndex = null;
+        let isLiveEditing = false;
+        let isExporting = false;
+
+        // UI Elements
+        const elements = {
+            textContent: document.getElementById('text-content'),
+            fontSizeSlider: document.getElementById('font-size'),
+            lineHeightSlider: document.getElementById('line-height'),
+            verticalSlider: document.getElementById('vertical-adjust'),
+            textColor: document.getElementById('text-color'),
+            outlineColor: document.getElementById('outline-color'),
+            outlineWidth: document.getElementById('outline-width'),
+            fontFamily: document.getElementById('font-family'),
+            textAlign: document.getElementById('text-align'),
+            fontWeight: document.getElementById('font-weight'),
+            textOpacity: document.getElementById('text-opacity'),
+            canvasBg: document.getElementById('canvas-bg'),
+            fileInput: document.getElementById('file-input'),
+            fileDropArea: document.getElementById('file-drop-area'),
+            slidesContainer: document.getElementById('slides-container'),
+            unassignedSection: document.getElementById('unassigned-section'),
+            unassignedImagesContainer: document.getElementById('unassigned-images'),
+            currentInfo: document.getElementById('current-info'),
+            createSlideBtn: document.getElementById('create-slide-btn'),
+            addTextBtn: document.getElementById('add-text'),
+            doneEditingBtn: document.getElementById('done-editing'),
+            liveEditingIndicator: document.getElementById('live-editing-indicator'),
+            loadingScreen: document.getElementById('loading-screen'),
+            messageContainer: document.getElementById('message-container')
+        };
+
+        // Utility functions
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `${type === 'error' ? 'error-message' : 'success-message'}`;
+            messageDiv.textContent = message;
+            
+            elements.messageContainer.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 5000);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Vertical position presets
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const position = parseInt(btn.getAttribute('data-position'));
+                elements.verticalSlider.value = position;
+                document.getElementById('vertical-value').textContent = `${position}px`;
+                if (isLiveEditing) {
+                    drawCurrentImage();
+                }
+            });
+        });
+
+        // Image and slide data structures
+        class ImageData {
+            constructor(img, filename) {
+                this.img = img;
+                this.filename = filename;
+                this.textElements = [];
+                this.id = Date.now() + Math.random();
+            }
+        }
+
+        class Slide {
+            constructor(slideNumber) {
+                this.name = `Slide ${slideNumber}`;
+                this.images = [];
+                this.id = Date.now() + Math.random();
+            }
+
+            addImage(imageData) {
+                this.images.push(imageData);
+            }
+
+            removeImage(imageData) {
+                const index = this.images.indexOf(imageData);
+                if (index > -1) {
+                    this.images.splice(index, 1);
+                }
+            }
+        }
+
+        // Initialize canvas
+        function initializeCanvas() {
+            try {
+                const bgColor = elements.canvasBg.value;
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = bgColor === '#000000' ? '#ffffff' : '#000000';
+                ctx.font = '24px Poppins';
+                ctx.textAlign = 'center';
+                ctx.fillText('Upload images to begin', canvas.width/2, canvas.height/2);
+            } catch (error) {
+                console.error('Canvas initialization error:', error);
+                showMessage('Canvas initialization failed', 'error');
+            }
+        }
+
+        // DYNAMIC CANVAS SIZING - NO MORE CROPPING OR BLACK BARS!
+        function resizeCanvasToImage(img) {
+            const MAX_W = 1080;
+            const MAX_H = 1920;
+            const imgRatio = img.width / img.height;
+            const maxRatio = MAX_W / MAX_H;
+
+            let newW, newH;
+            if (imgRatio > maxRatio) {
+                // Image is wider - fit to max width
+                newW = MAX_W;
+                newH = MAX_W / imgRatio;
+            } else {
+                // Image is taller - fit to max height  
+                newH = MAX_H;
+                newW = MAX_H * imgRatio;
+            }
+
+            canvas.width = newW;
+            canvas.height = newH;
+        }
+
+        function drawImageWithAspectRatio(img) {
+            try {
+                // Resize canvas to perfectly match image aspect ratio
+                resizeCanvasToImage(img);
+                
+                // Clear the canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Optional background (usually transparent now)
+                const bg = elements.canvasBg.value;
+                if (bg !== 'transparent') {
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                
+                // Draw the image to fill the entire canvas perfectly
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+            } catch (error) {
+                console.error('Image drawing error:', error);
+                showMessage('Failed to draw image', 'error');
+            }
+        }
+
+        // Enhanced text rendering
+        function drawMultilineText(text, x, y, fontSize, fontFamily, fontWeight, color, align, opacity, outlineColor, outlineWidth, lineHeight) {
+            if (!text) return;
+            
+            try {
+                const lines = text.split('\n');
+                const actualLineHeight = fontSize * lineHeight;
+                
+                ctx.globalAlpha = opacity;
+                ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                ctx.textAlign = align;
+                
+                const totalTextHeight = (lines.length - 1) * actualLineHeight;
+                let startY = y - (totalTextHeight / 2);
+                
+                lines.forEach((line, index) => {
+                    const currentY = startY + (index * actualLineHeight);
+                    
+                    if (outlineWidth > 0) {
+                        ctx.strokeStyle = outlineColor;
+                        ctx.lineWidth = outlineWidth;
+                        ctx.strokeText(line, x, currentY);
+                    }
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillText(line, x, currentY);
+                });
+                
+                ctx.globalAlpha = 1;
+            } catch (error) {
+                console.error('Text rendering error:', error);
+            }
+        }
+
+        function drawCurrentImage() {
+            try {
+                if (currentSlideIndex === null || currentImageIndex === null || 
+                    !slides[currentSlideIndex] || !slides[currentSlideIndex].images[currentImageIndex]) {
+                    
+                    // Default canvas setup when no image selected
+                    ctx.fillStyle = elements.canvasBg.value;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = elements.canvasBg.value === '#000000' ? '#ffffff' : '#000000';
+                    ctx.font = '24px Poppins';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Select an image to edit', canvas.width/2, canvas.height/2);
+                    return;
+                }
+
+                const currentImageData = slides[currentSlideIndex].images[currentImageIndex];
+                
+                // Draw image with dynamic sizing (no cropping!)
+                drawImageWithAspectRatio(currentImageData.img);
+                
+                // Draw text elements for current image only
+                currentImageData.textElements.forEach((el) => {
+                    if (!el.text) return;
+                    
+                    let xPos;
+                    if (el.align === 'left') xPos = 50;
+                    else if (el.align === 'right') xPos = canvas.width - 50;
+                    else xPos = canvas.width / 2;
+                    
+                    drawMultilineText(
+                        el.text, xPos, el.y, el.size, el.fontFamily, 
+                        el.fontWeight, el.color, el.align, el.opacity, 
+                        el.outlineColor, el.outlineWidth, el.lineHeight
+                    );
+                });
+                
+                // If in live editing mode, draw the current text being edited
+                if (isLiveEditing && elements.textContent.value.trim()) {
+                    const currentText = elements.textContent.value.trim();
+                    const size = parseInt(elements.fontSizeSlider.value);
+                    const y = parseInt(elements.verticalSlider.value);
+                    const color = elements.textColor.value;
+                    const outlineColorVal = elements.outlineColor.value;
+                    const outlineWidthVal = parseInt(elements.outlineWidth.value);
+                    const fontFamilyVal = elements.fontFamily.value;
+                    const fontWeightVal = elements.fontWeight.value;
+                    const align = elements.textAlign.value;
+                    const opacity = parseInt(elements.textOpacity.value) / 100;
+                    const lineHeightVal = parseFloat(elements.lineHeightSlider.value);
+                    
+                    let xPos;
+                    if (align === 'left') xPos = 50;
+                    else if (align === 'right') xPos = canvas.width - 50;
+                    else xPos = canvas.width / 2;
+                    
+                    drawMultilineText(
+                        currentText, xPos, y, size, fontFamilyVal, 
+                        fontWeightVal, color, align, opacity, 
+                        outlineColorVal, outlineWidthVal, lineHeightVal
+                    );
+                }
+
+                updateCurrentInfo();
+            } catch (error) {
+                console.error('Draw current image error:', error);
+                showMessage('Failed to render image', 'error');
+            }
+        }
+
+        function updateCurrentInfo() {
+            if (currentSlideIndex === null || !slides[currentSlideIndex]) {
+                elements.currentInfo.textContent = 'No slide selected';
+                return;
+            }
+            
+            const slide = slides[currentSlideIndex];
+            if (currentImageIndex === null || !slide.images[currentImageIndex]) {
+                elements.currentInfo.textContent = `${slide.name} - No image selected`;
+                return;
+            }
+            
+            const imageData = slide.images[currentImageIndex];
+            const filename = imageData?.filename || 'Unknown';
+            
+            elements.currentInfo.innerHTML = `
+                <strong>${slide.name}</strong> • 
+                Image ${currentImageIndex + 1} of ${slide.images.length} • 
+                ${filename}
+            `;
+        }
+
+        // Canvas background change handler
+        elements.canvasBg.addEventListener('change', drawCurrentImage);
+
+        // Load images with validation
+        function loadImages(files) {
+            if (!files || files.length === 0) return;
+            
+            let loadedCount = 0;
+            const newImages = [];
+            const maxFileSize = 10 * 1024 * 1024; // 10MB
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            
+            Array.from(files).forEach((file, index) => {
+                // Validate file
+                if (!validTypes.includes(file.type)) {
+                    showMessage(`Skipped ${file.name}: Invalid file type. Use JPEG, PNG, GIF, or WebP.`, 'error');
+                    return;
+                }
+                
+                if (file.size > maxFileSize) {
+                    showMessage(`Skipped ${file.name}: File too large. Maximum size is 10MB.`, 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        newImages.push(new ImageData(img, file.name));
+                        loadedCount++;
+                        
+                        if (loadedCount === Array.from(files).filter(f => 
+                            validTypes.includes(f.type) && f.size <= maxFileSize
+                        ).length) {
+                            unassignedImages.push(...newImages);
+                            renderUnassignedImages();
+                            renderSlidesUI();
+                            showMessage(`Successfully loaded ${newImages.length} images`, 'success');
+                        }
+                    };
+                    img.onerror = () => {
+                        showMessage(`Failed to load ${file.name}`, 'error');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => {
+                    showMessage(`Failed to read ${file.name}`, 'error');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Create new slide with auto-numbering
+        elements.createSlideBtn.addEventListener('click', () => {
+            try {
+                const slideNumber = slides.length + 1;
+                slides.push(new Slide(slideNumber));
+                renderSlidesUI();
+                showMessage(`Created ${slides[slides.length - 1].name}`, 'success');
+            } catch (error) {
+                console.error('Create slide error:', error);
+                showMessage('Failed to create slide', 'error');
+            }
+        });
+
+        // Render unassigned images
+        function renderUnassignedImages() {
+            if (unassignedImages.length === 0) {
+                elements.unassignedSection.style.display = 'none';
+                return;
+            }
+            
+            elements.unassignedSection.style.display = 'block';
+            elements.unassignedImagesContainer.innerHTML = '';
+            
+            unassignedImages.forEach((imageData, index) => {
+                try {
+                    const thumbCanvas = document.createElement('canvas');
+                    const thumbCtx = thumbCanvas.getContext('2d');
+                    thumbCanvas.width = 50;
+                    thumbCanvas.height = 50;
+                    
+                    // Draw thumbnail with aspect ratio
+                    const ratio = Math.min(thumbCanvas.width / imageData.img.width, thumbCanvas.height / imageData.img.height);
+                    const width = imageData.img.width * ratio;
+                    const height = imageData.img.height * ratio;
+                    const x = (thumbCanvas.width - width) / 2;
+                    const y = (thumbCanvas.height - height) / 2;
+                    
+                    thumbCtx.fillStyle = '#374151';
+                    thumbCtx.fillRect(0, 0, thumbCanvas.width, thumbCanvas.height);
+                    thumbCtx.drawImage(imageData.img, x, y, width, height);
+                    
+                    const thumb = document.createElement('img');
+                    thumb.className = 'image-thumbnail';
+                    thumb.src = thumbCanvas.toDataURL();
+                    thumb.title = imageData.filename;
+                    thumb.draggable = true;
+                    thumb.setAttribute('aria-label', `Unassigned image: ${imageData.filename}`);
+                    
+                    // Drag events for images
+                    thumb.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', index);
+                        e.dataTransfer.effectAllowed = 'move';
+                    });
+                    
+                    elements.unassignedImagesContainer.appendChild(thumb);
+                } catch (error) {
+                    console.error('Thumbnail creation error:', error);
+                }
+            });
+        }
+
+        // Render slides UI with drag & drop
+        function renderSlidesUI() {
+            elements.slidesContainer.innerHTML = '';
+            
+            if (slides.length === 0) {
+                elements.slidesContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Create your first slide</p>';
+                return;
+            }
+            
+            slides.forEach((slide, slideIndex) => {
+                try {
+                    const slideDiv = document.createElement('div');
+                    slideDiv.className = `slide-group ${slideIndex === currentSlideIndex ? 'active' : ''}`;
+                    slideDiv.setAttribute('role', 'region');
+                    slideDiv.setAttribute('aria-label', `${slide.name} with ${slide.images.length} images`);
+                    
+                    // Make slide droppable
+                    slideDiv.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        slideDiv.classList.add('drag-over');
+                    });
+                    
+                    slideDiv.addEventListener('dragleave', () => {
+                        slideDiv.classList.remove('drag-over');
+                    });
+                    
+                    slideDiv.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        slideDiv.classList.remove('drag-over');
+                        
+                        const imageIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                        if (imageIndex >= 0 && imageIndex < unassignedImages.length) {
+                            const imageData = unassignedImages.splice(imageIndex, 1)[0];
+                            slide.addImage(imageData);
+                            renderUnassignedImages();
+                            renderSlidesUI();
+                            showMessage(`Added image to ${slide.name}`, 'success');
+                        }
+                    });
+                    
+                    const header = document.createElement('div');
+                    header.className = 'flex justify-between items-center mb-3';
+                    header.innerHTML = `
+                        <span class="font-semibold text-gray-200">${slide.name}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">${slide.images.length} images</span>
+                            <button class="btn-secondary text-red-400 hover:text-red-300" onclick="deleteSlide(${slideIndex})" aria-label="Delete ${slide.name}">Delete</button>
+                        </div>
+                    `;
+                    slideDiv.appendChild(header);
+                    
+                    const imagesDiv = document.createElement('div');
+                    imagesDiv.className = 'flex gap-3 flex-wrap';
+                    
+                    slide.images.forEach((imageData, imgIndex) => {
+                        try {
+                            const thumbCanvas = document.createElement('canvas');
+                            const thumbCtx = thumbCanvas.getContext('2d');
+                            thumbCanvas.width = 50;
+                            thumbCanvas.height = 50;
+                            
+                            const ratio = Math.min(thumbCanvas.width / imageData.img.width, thumbCanvas.height / imageData.img.height);
+                            const width = imageData.img.width * ratio;
+                            const height = imageData.img.height * ratio;
+                            const x = (thumbCanvas.width - width) / 2;
+                            const y = (thumbCanvas.height - height) / 2;
+                            
+                            thumbCtx.fillStyle = '#374151';
+                            thumbCtx.fillRect(0, 0, thumbCanvas.width, thumbCanvas.height);
+                            thumbCtx.drawImage(imageData.img, x, y, width, height);
+                            
+                            const thumb = document.createElement('img');
+                            thumb.className = `image-thumbnail ${
+                                slideIndex === currentSlideIndex && imgIndex === currentImageIndex ? 'active' : ''
+                            }`;
+                            thumb.src = thumbCanvas.toDataURL();
+                            thumb.title = imageData.filename;
+                            thumb.setAttribute('aria-label', `${imageData.filename} in ${slide.name}`);
+                            thumb.addEventListener('click', () => {
+                                currentSlideIndex = slideIndex;
+                                currentImageIndex = imgIndex;
+                                renderSlidesUI();
+                                drawCurrentImage();
+                                renderTextElementList();
+                            });
+                            
+                            imagesDiv.appendChild(thumb);
+                        } catch (error) {
+                            console.error('Slide thumbnail error:', error);
+                        }
+                    });
+                    
+                    slideDiv.appendChild(imagesDiv);
+                    elements.slidesContainer.appendChild(slideDiv);
+                } catch (error) {
+                    console.error('Slide rendering error:', error);
+                }
+            });
+        }
+
+        // Delete slide function (global scope for onclick)
+        window.deleteSlide = (slideIndex) => {
+            try {
+                if (confirm(`Delete ${slides[slideIndex].name}? Images will return to unassigned.`)) {
+                    const slide = slides[slideIndex];
+                    unassignedImages.push(...slide.images);
+                    slides.splice(slideIndex, 1);
+                    
+                    // Renumber remaining slides
+                    slides.forEach((slide, index) => {
+                        slide.name = `Slide ${index + 1}`;
+                    });
+                    
+                    // Reset current selection if deleted slide was selected
+                    if (currentSlideIndex === slideIndex) {
+                        currentSlideIndex = null;
+                        currentImageIndex = null;
+                    }
+                    
+                    renderUnassignedImages();
+                    renderSlidesUI();
+                    drawCurrentImage();
+                    showMessage('Slide deleted successfully', 'success');
+                }
+            } catch (error) {
+                console.error('Delete slide error:', error);
+                showMessage('Failed to delete slide', 'error');
+            }
+        };
+
+        // Helper functions for text
+        function getCurrentImageData() {
+            if (currentSlideIndex === null || currentImageIndex === null || 
+                !slides[currentSlideIndex] || !slides[currentSlideIndex].images[currentImageIndex]) {
+                return null;
+            }
+            return slides[currentSlideIndex].images[currentImageIndex];
+        }
+
+        function readTextElementFromControls() {
+            return {
+                text: elements.textContent.value.trim(),
+                size: parseInt(elements.fontSizeSlider.value),
+                y: parseInt(elements.verticalSlider.value),
+                color: elements.textColor.value,
+                outlineColor: elements.outlineColor.value,
+                outlineWidth: parseInt(elements.outlineWidth.value),
+                fontFamily: elements.fontFamily.value,
+                fontWeight: elements.fontWeight.value,
+                align: elements.textAlign.value,
+                opacity: parseInt(elements.textOpacity.value) / 100,
+                lineHeight: parseFloat(elements.lineHeightSlider.value),
+                id: Date.now() + Math.random()
+            };
+        }
+
+        function populateControlsFromTextElement(element) {
+            elements.textContent.value = element.text;
+            elements.fontSizeSlider.value = element.size;
+            elements.lineHeightSlider.value = element.lineHeight;
+            elements.verticalSlider.value = element.y;
+            elements.textColor.value = element.color;
+            elements.outlineColor.value = element.outlineColor;
+            elements.outlineWidth.value = element.outlineWidth;
+            elements.fontFamily.value = element.fontFamily;
+            elements.fontWeight.value = element.fontWeight || '400';
+            elements.textAlign.value = element.align;
+            elements.textOpacity.value = element.opacity * 100;
+            updateSliderDisplays();
+        }
+
+        function resetTextControls() {
+            elements.textContent.value = '';
+            elements.fontSizeSlider.value = 48;
+            elements.lineHeightSlider.value = 1.2;
+            elements.verticalSlider.value = 751;
+            elements.textColor.value = '#ffffff';
+            elements.outlineColor.value = '#000000';
+            elements.outlineWidth.value = 7;
+            elements.fontFamily.value = 'Poppins';
+            elements.fontWeight.value = '400';
+            elements.textAlign.value = 'center';
+            elements.textOpacity.value = 100;
+            updateSliderDisplays();
+        }
+
+        // Live editing mode functions
+        function enterLiveEditingMode(index = null) {
+            const imageData = getCurrentImageData();
+            if (!imageData) return;
+            
+            isLiveEditing = true;
+            selectedTextIndex = index;
+            
+            if (index !== null) {
+                populateControlsFromTextElement(imageData.textElements[index]);
+            }
+            
+            elements.textContent.classList.add('live');
+            elements.liveEditingIndicator.classList.remove('hidden');
+            elements.addTextBtn.classList.add('hidden');
+            elements.doneEditingBtn.classList.remove('hidden');
+            
+            elements.textContent.focus();
+            renderTextElementList();
+        }
+
+        function exitLiveEditingMode() {
+            isLiveEditing = false;
+            
+            const imageData = getCurrentImageData();
+            if (imageData && selectedTextIndex !== null && elements.textContent.value.trim()) {
+                imageData.textElements[selectedTextIndex] = readTextElementFromControls();
+            }
+            
+            selectedTextIndex = null;
+            
+            elements.textContent.classList.remove('live');
+            elements.liveEditingIndicator.classList.add('hidden');
+            elements.addTextBtn.classList.remove('hidden');
+            elements.doneEditingBtn.classList.add('hidden');
+            
+            resetTextControls();
+            renderTextElementList();
+            drawCurrentImage();
+            renderSlidesUI();
+        }
+
+        // Event listeners for live editing with debouncing
+        function setupLiveEditingListeners() {
+            const liveUpdateElements = [
+                elements.textContent, elements.fontSizeSlider, elements.lineHeightSlider, elements.verticalSlider,
+                elements.textColor, elements.outlineColor, elements.outlineWidth, elements.fontFamily, 
+                elements.fontWeight, elements.textAlign, elements.textOpacity
+            ];
+
+            const debouncedUpdate = debounce(() => {
+                if (isLiveEditing) {
+                    drawCurrentImage();
+                    updateSliderDisplays();
+                }
+            }, 16); // ~60fps
+
+            liveUpdateElements.forEach(element => {
+                const eventType = element.type === 'range' || element.type === 'color' ? 'input' : 
+                                  element.tagName === 'SELECT' ? 'change' : 'input';
+                
+                element.addEventListener(eventType, debouncedUpdate);
+            });
+
+            elements.textContent.addEventListener('input', debouncedUpdate);
+        }
+
+        // Add text functionality
+        elements.addTextBtn.addEventListener('click', () => {
+            enterLiveEditingMode();
+        });
+
+        elements.doneEditingBtn.addEventListener('click', () => {
+            const imageData = getCurrentImageData();
+            if (!imageData) return;
+            
+            const textData = readTextElementFromControls();
+            if (textData.text) {
+                if (selectedTextIndex !== null) {
+                    imageData.textElements[selectedTextIndex] = textData;
+                } else {
+                    imageData.textElements.push(textData);
+                }
+                showMessage('Text layer saved successfully', 'success');
+            }
+            exitLiveEditingMode();
+        });
+
+        function renderTextElementList() {
+            const list = document.getElementById('text-elements-list');
+            const imageData = getCurrentImageData();
+            
+            if (!imageData || imageData.textElements.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-center py-6">No text layers for current image</p>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            imageData.textElements.forEach((el, i) => {
+                const div = document.createElement('div');
+                div.className = `text-element-item ${
+                    (isLiveEditing && selectedTextIndex === i) ? 'live-editing' : ''
+                }`;
+                div.setAttribute('role', 'listitem');
+                
+                const previewText = el.text.length > 25 ? el.text.substring(0, 25) + '...' : el.text;
+                const lineCount = el.text.split('\n').length;
+                
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center flex-1">
+                            <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0" style="background:${el.color}; border: 2px solid ${el.outlineColor};" aria-hidden="true"></span>
+                            <div class="flex-1 min-w-0">
+                                <div class="truncate font-medium text-sm text-gray-200">${previewText}</div>
+                                <div class="text-xs text-gray-400">${el.size}px • ${lineCount} line${lineCount > 1 ? 's' : ''}</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 ml-3">
+                            <button class="edit-btn btn-secondary text-blue-400" data-index="${i}" aria-label="Edit text layer ${i + 1}">Edit</button>
+                            <button class="remove-btn btn-secondary text-red-400" data-index="${i}" aria-label="Remove text layer ${i + 1}">×</button>
+                        </div>
+                    </div>
+                `;
+                
+                div.querySelector('.edit-btn').onclick = e => {
+                    e.preventDefault();
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    if (isLiveEditing) {
+                        exitLiveEditingMode();
+                    }
+                    setTimeout(() => enterLiveEditingMode(index), 100);
+                };
+                
+                div.querySelector('.remove-btn').onclick = e => {
+                    e.preventDefault();
+                    if (confirm('Delete this text layer?')) {
+                        const index = parseInt(e.target.getAttribute('data-index'));
+                        imageData.textElements.splice(index, 1);
+                        
+                        if (selectedTextIndex === index) {
+                            exitLiveEditingMode();
+                        } else if (selectedTextIndex > index) {
+                            selectedTextIndex--;
+                        }
+                        
+                        drawCurrentImage();
+                        renderTextElementList();
+                        renderSlidesUI();
+                        showMessage('Text layer removed', 'success');
+                    }
+                };
+                
+                list.appendChild(div);
+            });
+        }
+
+        function updateSliderDisplays() {
+            document.getElementById('font-size-value').textContent = `${elements.fontSizeSlider.value}px`;
+            document.getElementById('line-height-value').textContent = `${elements.lineHeightSlider.value}x`;
+            document.getElementById('vertical-value').textContent = `${elements.verticalSlider.value}px`;
+            document.getElementById('opacity-value').textContent = `${elements.textOpacity.value}%`;
+            document.getElementById('outline-value').textContent = `${elements.outlineWidth.value}px`;
+        }
+
+        // Navigation with keyboard support
+        function navigateToPrevImage() {
+            if (currentSlideIndex === null || !slides[currentSlideIndex]) return;
+            
+            const currentSlide = slides[currentSlideIndex];
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+            } else if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                currentImageIndex = slides[currentSlideIndex].images.length - 1;
+            }
+            
+            renderSlidesUI();
+            drawCurrentImage();
+            renderTextElementList();
+        }
+
+        function navigateToNextImage() {
+            if (currentSlideIndex === null || !slides[currentSlideIndex]) return;
+            
+            const currentSlide = slides[currentSlideIndex];
+            if (currentImageIndex < currentSlide.images.length - 1) {
+                currentImageIndex++;
+            } else if (currentSlideIndex < slides.length - 1) {
+                currentSlideIndex++;
+                currentImageIndex = 0;
+            }
+            
+            renderSlidesUI();
+            drawCurrentImage();
+            renderTextElementList();
+        }
+
+        document.getElementById('prev-image').addEventListener('click', navigateToPrevImage);
+        document.getElementById('next-image').addEventListener('click', navigateToNextImage);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return; // Don't interfere with form inputs
+            }
+
+            switch(e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    navigateToPrevImage();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    navigateToNextImage();
+                    break;
+                case 'Escape':
+                    if (isLiveEditing) {
+                        exitLiveEditingMode();
+                    }
+                    break;
+            }
+        });
+
+        // File handling with enhanced drag and drop
+        function setupFileHandling() {
+            elements.fileDropArea.addEventListener('click', () => elements.fileInput.click());
+            elements.fileInput.addEventListener('change', e => loadImages(e.target.files));
+
+            // Enhanced drag and drop
+            let dragCounter = 0;
+
+            elements.fileDropArea.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                dragCounter++;
+                elements.fileDropArea.classList.add('drag-over');
+            });
+
+            elements.fileDropArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dragCounter--;
+                if (dragCounter === 0) {
+                    elements.fileDropArea.classList.remove('drag-over');
+                }
+            });
+
+            elements.fileDropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            elements.fileDropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dragCounter = 0;
+                elements.fileDropArea.classList.remove('drag-over');
+                loadImages(e.dataTransfer.files);
+            });
+
+            // Keyboard support for file area
+            elements.fileDropArea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    elements.fileInput.click();
+                }
+            });
+        }
+
+        // Export functionality with progress tracking
+        async function exportAllSlides() {
+            if (slides.length === 0) {
+                showMessage('Please create at least one slide first', 'error');
+                return;
+            }
+            
+            if (isExporting) return;
+            
+            if (isLiveEditing) {
+                exitLiveEditingMode();
+            }
+            
+            isExporting = true;
+            const exportBtn = document.getElementById('export-all');
+            const originalText = exportBtn.innerHTML;
+            exportBtn.innerHTML = `<span class="animate-pulse">Processing ${slides.length} slides...</span>`;
+            exportBtn.disabled = true;
+            
+            try {
+                const zip = new JSZip();
+                let processedSlides = 0;
+                
+                for (let slideIndex = 0; slideIndex < slides.length; slideIndex++) {
+                    const slide = slides[slideIndex];
+                    if (slide.images.length === 0) continue;
+                    
+                    const slideFolder = zip.folder(slide.name.replace(/[^a-zA-Z0-9]/g, '_'));
+                    
+                    for (let imgIndex = 0; imgIndex < slide.images.length; imgIndex++) {
+                        const imageData = slide.images[imgIndex];
+                        
+                        // Render image with dynamic sizing + text overlays
+                        drawImageWithAspectRatio(imageData.img);
+                        
+                        // Draw text elements for this specific image
+                        imageData.textElements.forEach(el => {
+                            if (!el.text) return;
+                            
+                            let xPos;
+                            if (el.align === 'left') xPos = 50;
+                            else if (el.align === 'right') xPos = canvas.width - 50;
+                            else xPos = canvas.width / 2;
+                            
+                            drawMultilineText(
+                                el.text, xPos, el.y, el.size, el.fontFamily,
+                                el.fontWeight, el.color, el.align, el.opacity,
+                                el.outlineColor, el.outlineWidth, el.lineHeight
+                            );
+                        });
+                        
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                        const base64Data = dataUrl.split(',')[1];
+                        const filename = `${imageData.filename.split('.')[0]}_edited.jpg`;
+                        slideFolder.file(filename, base64Data, { base64: true });
+                    }
+                    
+                    processedSlides++;
+                    exportBtn.innerHTML = `<span class="animate-pulse">Processing slide ${processedSlides}/${slides.length}...</span>`;
+                }
+                
+                exportBtn.innerHTML = `<span class="animate-pulse">Creating download...</span>`;
+                
+                const blob = await zip.generateAsync({ 
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 6 }
+                });
+                
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `DailyDrop_Slides_Export_${new Date().toISOString().split('T')[0]}.zip`;
+                a.click();
+                
+                // Clean up object URL
+                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+                
+                showMessage(`Successfully exported ${processedSlides} slides!`, 'success');
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                showMessage('Export failed. Please try again.', 'error');
+            } finally {
+                isExporting = false;
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+                drawCurrentImage();
+            }
+        }
+
+        document.getElementById('export-all').addEventListener('click', exportAllSlides);
+
+        // Initialize application
+        function initializeApp() {
+            try {
+                initializeCanvas();
+                setupLiveEditingListeners();
+                setupFileHandling();
+                updateSliderDisplays();
+                
+                // Hide loading screen
+                setTimeout(() => {
+                    elements.loadingScreen.classList.add('hidden');
+                    setTimeout(() => {
+                        elements.loadingScreen.style.display = 'none';
+                    }, 500);
+                }, 1000);
+                
+                showMessage('DailyDrop Slide Editor loaded successfully!', 'success');
+            } catch (error) {
+                console.error('App initialization error:', error);
+                showMessage('Failed to initialize application. Please refresh the page.', 'error');
+            }
+        }
+
+        // Start the application when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+</body>
+</html>
