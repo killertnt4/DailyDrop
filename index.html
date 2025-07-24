@@ -15,6 +15,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- TikTok Sans Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=TikTok+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -641,6 +645,7 @@
                 <div class="mb-4">
                     <label for="font-family" class="block text-sm font-medium text-gray-300 mb-2">Font Family:</label>
                     <select id="font-family" class="input-field w-full">
+                        <option value="TikTok Sans" selected>TikTok Sans</option>
                         <option value="Poppins">Poppins</option>
                         <option value="Arial">Arial</option>
                         <option value="Helvetica">Helvetica</option>
@@ -1282,7 +1287,7 @@
             elements.textColor.value = '#ffffff';
             elements.outlineColor.value = '#000000';
             elements.outlineWidth.value = 7;
-            elements.fontFamily.value = 'Poppins';
+            elements.fontFamily.value = 'TikTok Sans'; // Changed from 'Poppins' to 'TikTok Sans'
             elements.fontWeight.value = '400';
             elements.textAlign.value = 'center';
             elements.textOpacity.value = 100;
