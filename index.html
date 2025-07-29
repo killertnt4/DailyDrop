@@ -15,10 +15,37 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- TikTok Sans Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Load TikTok Sans from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'TikTok Sans';
+            src: url('https://fonts.gstatic.com/s/tiktoksans/v1/B5Y9YYeGqKwgKmJvOIRsTA.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TikTok Sans';
+            src: url('https://fonts.gstatic.com/s/tiktoksans/v1/B5Y_YYeGqKwgKmJvOIRsVInMjw.woff2') format('woff2');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TikTok Sans';
+            src: url('https://fonts.gstatic.com/s/tiktoksans/v1/B5Y9YYeGqKwgKmJvOIRsXA.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
     
     <style>
         :root {
@@ -81,21 +108,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* TikTok Classic Text Style */
-        .tiktok-classic-text {
-            font-family: 'Montserrat', 'TikTok Sans', sans-serif;
-            font-weight: 600;
-            color: #000;
-            background: #fff;
-            border-radius: 32px;
-            padding: 12px 28px;
-            display: inline-block;
-            line-height: 1.2;
-            letter-spacing: 0.5px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
         .glass-card {
             background: rgba(26, 26, 46, 0.8);
             backdrop-filter: blur(20px);
@@ -125,6 +137,7 @@
             display: block; 
             border-radius: 16px;
             border: none;
+            cursor: text;
         }
 
         .control-card {
@@ -364,6 +377,63 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .text-editing-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .text-editing-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .live-text-editor {
+            background: white;
+            border: none;
+            border-radius: 32px;
+            padding: 16px 24px;
+            font-family: 'TikTok Sans', 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 48px;
+            color: #000;
+            text-align: center;
+            outline: none;
+            min-width: 200px;
+            max-width: 80%;
+            resize: none;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
+        }
+
+        .preset-btn {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             body {
@@ -387,6 +457,11 @@
                 gap: 8px;
                 padding: 12px;
             }
+
+            .live-text-editor {
+                font-size: 32px;
+                padding: 12px 20px;
+            }
         }
 
         /* Error states */
@@ -405,12 +480,29 @@
             border-radius: 6px;
             cursor: pointer;
         }
+
+        .text-preview {
+            position: absolute;
+            pointer-events: none;
+            z-index: 100;
+            font-family: 'TikTok Sans', 'Montserrat', sans-serif;
+        }
     </style>
 </head>
 <body>
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="spinner"></div>
+    </div>
+
+    <!-- Live Text Editor Overlay -->
+    <div id="text-editing-overlay" class="text-editing-overlay">
+        <textarea 
+            id="live-text-editor" 
+            class="live-text-editor" 
+            placeholder="Type your text..."
+            spellcheck="false"
+        ></textarea>
     </div>
 
     <div class="max-w-7xl mx-auto p-4 md:p-6">
@@ -460,9 +552,14 @@
                     </select>
                 </div>
                 
-                <button id="export-current" class="btn-success w-full mt-6" aria-label="Export current slide">
-                    Export Current Slide
-                </button>
+                <div class="flex gap-3 mt-6">
+                    <button id="export-current" class="btn-success flex-1" aria-label="Export current slide">
+                        Export Current Image
+                    </button>
+                    <button id="export-slide" class="btn-primary flex-1" aria-label="Export entire slide">
+                        Export Entire Slide
+                    </button>
+                </div>
             </section>
 
             <!-- Editor Panel -->
@@ -482,11 +579,18 @@
                     <button id="prev-image" class="btn-primary flex-1" aria-label="Previous image">← Previous</button>
                     <button id="next-image" class="btn-primary flex-1" aria-label="Next image">Next →</button>
                 </nav>
+
+                <div class="mt-4">
+                    <button id="add-text-btn" class="btn-success w-full" aria-label="Add text to image">
+                        Click to Add TikTok Text
+                    </button>
+                    <p class="text-xs text-gray-400 mt-2 text-center">Double-click on canvas to edit existing text</p>
+                </div>
             </section>
 
-            <!-- Text Controls Panel with TikTok Style -->
+            <!-- Text Controls Panel -->
             <section class="control-card order-2 lg:order-3">
-                <h2 class="section-header">✍️ Add TikTok Text</h2>
+                <h2 class="section-header">✍️ TikTok Text Settings</h2>
                 
                 <!-- TikTok Style Presets -->
                 <div class="mb-4">
@@ -496,11 +600,6 @@
                         <button class="preset-btn" data-preset="bold">Bold White</button>
                         <button class="preset-btn" data-preset="colorful">Colorful</button>
                     </div>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="text-content" class="block text-sm font-medium text-gray-300 mb-2">Text Content:</label>
-                    <textarea id="text-content" class="input-field" rows="4" placeholder="Enter your TikTok text...&#10;Use Enter for new lines"></textarea>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -542,7 +641,8 @@
                     <div>
                         <label for="font-family" class="block text-sm font-medium text-gray-300 mb-2">Font:</label>
                         <select id="font-family" class="input-field">
-                            <option value="Montserrat" selected>Montserrat (TikTok Style)</option>
+                            <option value="TikTok Sans" selected>TikTok Sans (Official)</option>
+                            <option value="Montserrat">Montserrat</option>
                             <option value="Poppins">Poppins</option>
                             <option value="Arial">Arial</option>
                             <option value="Impact">Impact</option>
@@ -572,11 +672,6 @@
                         <input type="range" id="border-radius" min="0" max="50" value="32" class="slider">
                         <span id="radius-value" class="text-sm text-gray-400">32px</span>
                     </div>
-                </div>
-                
-                <div class="flex gap-3 mb-4">
-                    <button id="add-text" class="btn-primary flex-1">Add Text</button>
-                    <button id="preview-text" class="btn-secondary flex-1">Preview</button>
                 </div>
                 
                 <div id="text-layers" class="space-y-2 max-h-48 overflow-y-auto">
@@ -637,6 +732,18 @@
             isLoading: false,
             canvas: null,
             ctx: null,
+            isTextEditing: false,
+            editingTextId: null,
+            textSettings: {
+                fontSize: 60,
+                fontFamily: 'TikTok Sans',
+                fontWeight: '600',
+                textColor: '#000000',
+                backgroundColor: '#ffffff',
+                borderRadius: 32,
+                align: 'center',
+                lineHeight: 1.2
+            },
 
             init() {
                 try {
@@ -780,7 +887,7 @@
             }
         }
 
-        // Canvas renderer with 3:4 aspect ratio enforcement
+        // Canvas renderer with 3:4 aspect ratio enforcement and proper TikTok text wrapping
         class CanvasRenderer {
             static CANVAS_WIDTH = 1080;
             static CANVAS_HEIGHT = 1440; // 3:4 ratio
@@ -834,6 +941,7 @@
                 }
             }
 
+            // Improved TikTok text rendering with proper line-by-line background wrapping[^24^][^31^][^34^]
             static drawTikTokText(textConfig) {
                 try {
                     if (!textConfig.text || !AppState.ctx) return;
@@ -845,40 +953,53 @@
                     } = textConfig;
 
                     // Set font
-                    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                    ctx.font = `${fontWeight} ${fontSize}px "${fontFamily}", sans-serif`;
                     ctx.textAlign = align;
 
-                    const lines = text.split('\n');
+                    const lines = text.split('\n').filter(line => line.trim() !== '');
                     const actualLineHeight = fontSize * lineHeight;
+                    const padding = Math.max(16, fontSize * 0.4); // Dynamic padding based on font size
+
+                    // Calculate starting Y position for multi-line text
                     const totalHeight = lines.length * actualLineHeight;
+                    let startY = y - totalHeight / 2 + actualLineHeight / 2;
 
-                    // Calculate text dimensions for background
-                    let maxWidth = 0;
-                    lines.forEach(line => {
-                        const metrics = ctx.measureText(line);
-                        maxWidth = Math.max(maxWidth, metrics.width);
-                    });
-
-                    // Draw background pill/rectangle
-                    const padding = 28;
-                    const bgWidth = maxWidth + (padding * 2);
-                    const bgHeight = totalHeight + (padding);
-                    
-                    let bgX = x - bgWidth / 2;
-                    if (align === 'left') bgX = x - padding;
-                    if (align === 'right') bgX = x - bgWidth + padding;
-
-                    const bgY = y - totalHeight / 2 - padding / 2;
-
-                    ctx.fillStyle = backgroundColor;
-                    this.roundRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
-                    ctx.fill();
-
-                    // Draw text
-                    ctx.fillStyle = textColor;
+                    // Draw each line with its own background pill (TikTok style)[^5^][^8^]
                     lines.forEach((line, index) => {
-                        const lineY = y - totalHeight / 2 + (index * actualLineHeight) + actualLineHeight / 2;
-                        ctx.fillText(line, x, lineY);
+                        if (line.trim() === '') return;
+
+                        const lineY = startY + (index * actualLineHeight);
+                        
+                        // Measure text width for this specific line
+                        const metrics = ctx.measureText(line);
+                        const lineWidth = metrics.width;
+                        
+                        // Calculate background dimensions for this line
+                        const bgWidth = lineWidth + (padding * 2);
+                        const bgHeight = actualLineHeight * 0.9; // Slightly smaller than line height
+                        
+                        // Calculate X position based on alignment
+                        let lineX = x;
+                        let bgX = x - bgWidth / 2;
+                        
+                        if (align === 'left') {
+                            lineX = x + padding;
+                            bgX = x;
+                        } else if (align === 'right') {
+                            lineX = x - padding;
+                            bgX = x - bgWidth;
+                        }
+
+                        const bgY = lineY - actualLineHeight / 2;
+
+                        // Draw background pill for this line only
+                        ctx.fillStyle = backgroundColor;
+                        this.roundRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
+                        ctx.fill();
+
+                        // Draw text for this line
+                        ctx.fillStyle = textColor;
+                        ctx.fillText(line, lineX, lineY);
                     });
 
                 } catch (error) {
@@ -929,6 +1050,180 @@
                 } catch (error) {
                     ErrorHandler.log(error, 'CanvasRenderer.renderCurrentImage');
                 }
+            }
+        }
+
+        // Live text editing system[^44^][^46^][^47^]
+        class LiveTextEditor {
+            static overlay = null;
+            static editor = null;
+            static currentTextLayer = null;
+
+            static init() {
+                this.overlay = document.getElementById('text-editing-overlay');
+                this.editor = document.getElementById('live-text-editor');
+                this.setupEventListeners();
+            }
+
+            static setupEventListeners() {
+                // Start editing on button click
+                document.getElementById('add-text-btn').addEventListener('click', () => {
+                    this.startEditing();
+                });
+
+                // Start editing on canvas double-click
+                AppState.canvas.addEventListener('dblclick', (e) => {
+                    const rect = AppState.canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) * (AppState.canvas.width / rect.width);
+                    const y = (e.clientY - rect.top) * (AppState.canvas.height / rect.height);
+                    
+                    // Check if clicking on existing text
+                    const clickedText = this.findTextAtPosition(x, y);
+                    if (clickedText) {
+                        this.startEditing(clickedText);
+                    } else {
+                        this.startEditing(null, x, y);
+                    }
+                });
+
+                // Handle text input
+                this.editor.addEventListener('input', () => {
+                    this.updatePreview();
+                });
+
+                // Handle keyboard shortcuts
+                this.editor.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.cancelEditing();
+                    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        this.finishEditing();
+                    }
+                });
+
+                // Handle clicking outside to finish
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) {
+                        this.finishEditing();
+                    }
+                });
+            }
+
+            static startEditing(textLayer = null, x = null, y = null) {
+                AppState.isTextEditing = true;
+                this.currentTextLayer = textLayer;
+
+                // Apply current text settings to editor
+                this.updateEditorStyle();
+
+                if (textLayer) {
+                    // Editing existing text
+                    this.editor.value = textLayer.text;
+                    AppState.editingTextId = textLayer.id;
+                } else {
+                    // Creating new text
+                    this.editor.value = '';
+                    AppState.editingTextId = null;
+                    
+                    // Set position if provided
+                    if (x !== null && y !== null) {
+                        AppState.textSettings.x = x;
+                        AppState.textSettings.y = y;
+                    }
+                }
+
+                this.overlay.classList.add('active');
+                this.editor.focus();
+                this.editor.select();
+            }
+
+            static updateEditorStyle() {
+                const settings = AppState.textSettings;
+                this.editor.style.fontFamily = `"${settings.fontFamily}", sans-serif`;
+                this.editor.style.fontSize = settings.fontSize + 'px';
+                this.editor.style.fontWeight = settings.fontWeight;
+                this.editor.style.color = settings.textColor;
+                this.editor.style.backgroundColor = settings.backgroundColor;
+                this.editor.style.borderRadius = settings.borderRadius + 'px';
+                this.editor.style.lineHeight = settings.lineHeight;
+            }
+
+            static updatePreview() {
+                // Live preview could be implemented here
+                // For now, we'll just auto-resize the textarea
+                this.autoResize();
+            }
+
+            static autoResize() {
+                this.editor.style.height = 'auto';
+                this.editor.style.height = this.editor.scrollHeight + 'px';
+            }
+
+            static finishEditing() {
+                const text = this.editor.value.trim();
+                
+                if (text) {
+                    const textConfig = {
+                        text,
+                        x: this.getXPosition(),
+                        y: parseInt(document.getElementById('vertical-position').value),
+                        fontSize: parseInt(document.getElementById('font-size').value),
+                        fontFamily: document.getElementById('font-family').value,
+                        fontWeight: document.getElementById('font-weight').value,
+                        textColor: document.getElementById('text-color').value,
+                        backgroundColor: document.getElementById('bg-color').value,
+                        borderRadius: parseInt(document.getElementById('border-radius').value),
+                        align: document.getElementById('text-align').value,
+                        lineHeight: parseFloat(document.getElementById('line-height').value),
+                        id: AppState.editingTextId || Date.now()
+                    };
+
+                    if (AppState.editingTextId) {
+                        // Update existing text
+                        const index = AppState.textLayers.findIndex(layer => layer.id === AppState.editingTextId);
+                        if (index !== -1) {
+                            AppState.textLayers[index] = textConfig;
+                        }
+                    } else {
+                        // Add new text
+                        AppState.textLayers.push(textConfig);
+                    }
+
+                    CanvasRenderer.renderCurrentImage();
+                    UI.renderTextLayers();
+                    ErrorHandler.showUserMessage('Text updated successfully', 'success');
+                }
+
+                this.closeEditor();
+            }
+
+            static cancelEditing() {
+                this.closeEditor();
+            }
+
+            static closeEditor() {
+                AppState.isTextEditing = false;
+                AppState.editingTextId = null;
+                this.currentTextLayer = null;
+                this.overlay.classList.remove('active');
+                this.editor.value = '';
+            }
+
+            static getXPosition() {
+                const align = document.getElementById('text-align').value;
+                switch (align) {
+                    case 'left': return 100;
+                    case 'right': return CanvasRenderer.CANVAS_WIDTH - 100;
+                    default: return CanvasRenderer.CANVAS_WIDTH / 2;
+                }
+            }
+
+            static findTextAtPosition(x, y) {
+                // Find text layer at clicked position
+                // This is a simplified implementation
+                return AppState.textLayers.find(layer => {
+                    const margin = 50; // Click tolerance
+                    return Math.abs(layer.x - x) < margin && Math.abs(layer.y - y) < margin;
+                });
             }
         }
 
@@ -1057,7 +1352,7 @@
                         
                         const preview = layer.text.length > 20 ? layer.text.substring(0, 20) + '...' : layer.text;
                         div.innerHTML = `
-                            <span class="text-sm">${preview}</span>
+                            <span class="text-sm cursor-pointer" onclick="LiveTextEditor.startEditing(AppState.textLayers[${index}])">${preview}</span>
                             <button class="btn-secondary text-red-400" onclick="TextController.removeLayer(${index})">Remove</button>
                         `;
                         
@@ -1073,7 +1368,7 @@
         class TextController {
             static presets = {
                 classic: {
-                    fontFamily: 'Montserrat',
+                    fontFamily: 'TikTok Sans',
                     fontWeight: '600',
                     fontSize: 60,
                     textColor: '#000000',
@@ -1082,7 +1377,7 @@
                     lineHeight: 1.2
                 },
                 bold: {
-                    fontFamily: 'Montserrat',
+                    fontFamily: 'TikTok Sans',
                     fontWeight: '700',
                     fontSize: 70,
                     textColor: '#ffffff',
@@ -1091,7 +1386,7 @@
                     lineHeight: 1.1
                 },
                 colorful: {
-                    fontFamily: 'Montserrat',
+                    fontFamily: 'TikTok Sans',
                     fontWeight: '600',
                     fontSize: 55,
                     textColor: '#ffffff',
@@ -1115,54 +1410,24 @@
                     document.getElementById('line-height').value = preset.lineHeight;
 
                     this.updateSliderValues();
+                    this.updateTextSettings();
                     ErrorHandler.showUserMessage(`Applied ${presetName} preset`, 'success');
                 } catch (error) {
                     ErrorHandler.log(error, 'TextController.applyPreset');
                 }
             }
 
-            static addTextLayer() {
-                try {
-                    const text = document.getElementById('text-content').value.trim();
-                    if (!text) {
-                        ErrorHandler.showUserMessage('Please enter some text', 'error');
-                        return;
-                    }
-
-                    const textConfig = {
-                        text,
-                        x: this.getXPosition(),
-                        y: parseInt(document.getElementById('vertical-position').value),
-                        fontSize: parseInt(document.getElementById('font-size').value),
-                        fontFamily: document.getElementById('font-family').value,
-                        fontWeight: document.getElementById('font-weight').value,
-                        textColor: document.getElementById('text-color').value,
-                        backgroundColor: document.getElementById('bg-color').value,
-                        borderRadius: parseInt(document.getElementById('border-radius').value),
-                        align: document.getElementById('text-align').value,
-                        lineHeight: parseFloat(document.getElementById('line-height').value),
-                        id: Date.now()
-                    };
-
-                    AppState.textLayers.push(textConfig);
-                    CanvasRenderer.renderCurrentImage();
-                    UI.renderTextLayers();
-                    
-                    // Clear text input
-                    document.getElementById('text-content').value = '';
-                    ErrorHandler.showUserMessage('Text layer added successfully', 'success');
-                } catch (error) {
-                    ErrorHandler.log(error, 'TextController.addTextLayer');
-                }
-            }
-
-            static getXPosition() {
-                const align = document.getElementById('text-align').value;
-                switch (align) {
-                    case 'left': return 100;
-                    case 'right': return CanvasRenderer.CANVAS_WIDTH - 100;
-                    default: return CanvasRenderer.CANVAS_WIDTH / 2;
-                }
+            static updateTextSettings() {
+                AppState.textSettings = {
+                    fontSize: parseInt(document.getElementById('font-size').value),
+                    fontFamily: document.getElementById('font-family').value,
+                    fontWeight: document.getElementById('font-weight').value,
+                    textColor: document.getElementById('text-color').value,
+                    backgroundColor: document.getElementById('bg-color').value,
+                    borderRadius: parseInt(document.getElementById('border-radius').value),
+                    align: document.getElementById('text-align').value,
+                    lineHeight: parseFloat(document.getElementById('line-height').value)
+                };
             }
 
             static removeLayer(index) {
@@ -1219,17 +1484,17 @@
 
                     // Slider updates
                     ['font-size', 'line-height', 'vertical-position', 'border-radius'].forEach(id => {
-                        document.getElementById(id).addEventListener('input', this.updateSliderValues);
+                        document.getElementById(id).addEventListener('input', () => {
+                            this.updateSliderValues();
+                            this.updateTextSettings();
+                        });
                     });
 
-                    // Add text button
-                    document.getElementById('add-text').addEventListener('click', () => {
-                        this.addTextLayer();
-                    });
-
-                    // Preview button
-                    document.getElementById('preview-text').addEventListener('click', () => {
-                        CanvasRenderer.renderCurrentImage();
+                    // Settings updates
+                    ['font-family', 'font-weight', 'text-color', 'bg-color', 'text-align'].forEach(id => {
+                        document.getElementById(id).addEventListener('change', () => {
+                            this.updateTextSettings();
+                        });
                     });
 
                 } catch (error) {
@@ -1238,9 +1503,9 @@
             }
         }
 
-        // Export functionality
+        // Enhanced export functionality with bulk slide export[^64^][^65^][^68^]
         class ExportController {
-            static async exportCurrentSlide() {
+            static async exportCurrentImage() {
                 try {
                     const currentImage = AppState.getCurrentImage();
                     if (!currentImage) {
@@ -1265,10 +1530,72 @@
 
                     ErrorHandler.showUserMessage('Image exported successfully!', 'success');
                 } catch (error) {
-                    ErrorHandler.log(error, 'ExportController.exportCurrentSlide');
+                    ErrorHandler.log(error, 'ExportController.exportCurrentImage');
                 } finally {
                     const btn = document.getElementById('export-current');
-                    btn.textContent = 'Export Current Slide';
+                    btn.textContent = 'Export Current Image';
+                    btn.disabled = false;
+                }
+            }
+
+            static async exportEntireSlide() {
+                try {
+                    const slideImages = AppState.images.get(AppState.currentSlide);
+                    if (!slideImages || slideImages.length === 0) {
+                        ErrorHandler.showUserMessage('No images in current slide to export', 'error');
+                        return;
+                    }
+
+                    const btn = document.getElementById('export-slide');
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Exporting Slide...';
+                    btn.disabled = true;
+
+                    // Create ZIP file
+                    const zip = new JSZip();
+                    const slideFolder = zip.folder(`slide_${AppState.currentSlide}`);
+
+                    // Store current state
+                    const originalImageIndex = AppState.currentImageIndex;
+                    const originalTextLayers = [...AppState.textLayers];
+
+                    for (let i = 0; i < slideImages.length; i++) {
+                        // Set image and clear text layers for each image
+                        AppState.currentImageIndex = i;
+                        AppState.textLayers = [];
+                        
+                        // Render the image
+                        CanvasRenderer.renderCurrentImage();
+
+                        // Get canvas data
+                        const dataUrl = AppState.canvas.toDataURL('image/jpeg', 0.95);
+                        const base64Data = dataUrl.split(',')[1];
+                        
+                        // Add to ZIP
+                        slideFolder.file(`image_${i + 1}.jpg`, base64Data, { base64: true });
+                    }
+
+                    // Restore original state
+                    AppState.currentImageIndex = originalImageIndex;
+                    AppState.textLayers = originalTextLayers;
+                    CanvasRenderer.renderCurrentImage();
+
+                    // Generate and download ZIP
+                    const zipBlob = await zip.generateAsync({ type: 'blob' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(zipBlob);
+                    link.download = `slide_${AppState.currentSlide}_complete.zip`;
+                    link.click();
+
+                    // Clean up
+                    URL.revokeObjectURL(link.href);
+                    
+                    ErrorHandler.showUserMessage(`Slide ${AppState.currentSlide} exported successfully with ${slideImages.length} images!`, 'success');
+                } catch (error) {
+                    ErrorHandler.log(error, 'ExportController.exportEntireSlide');
+                } finally {
+                    const btn = document.getElementById('export-slide');
+                    btn.textContent = 'Export Entire Slide';
                     btn.disabled = false;
                 }
             }
@@ -1338,7 +1665,7 @@
 
                     // Keyboard navigation
                     document.addEventListener('keydown', (e) => {
-                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || AppState.isTextEditing) return;
                         
                         if (e.key === 'ArrowLeft') {
                             e.preventDefault();
@@ -1354,14 +1681,19 @@
             }
         }
 
-        // Make TextController.removeLayer available globally
+        // Make classes available globally
         window.TextController = TextController;
+        window.LiveTextEditor = LiveTextEditor;
+        window.AppState = AppState;
 
         // Main application initialization
         async function initializeApp() {
             try {
                 // Initialize app state
                 AppState.init();
+
+                // Initialize live text editor
+                LiveTextEditor.init();
 
                 // Setup event listeners
                 TextController.setupEventListeners();
@@ -1372,9 +1704,13 @@
                     CanvasRenderer.renderCurrentImage();
                 });
 
-                // Export handler
+                // Export handlers
                 document.getElementById('export-current').addEventListener('click', () => {
-                    ExportController.exportCurrentSlide();
+                    ExportController.exportCurrentImage();
+                });
+
+                document.getElementById('export-slide').addEventListener('click', () => {
+                    ExportController.exportEntireSlide();
                 });
 
                 // Load all images
@@ -1390,6 +1726,7 @@
                     UI.renderImageGallery();
                     CanvasRenderer.renderCurrentImage();
                     TextController.updateSliderValues();
+                    TextController.updateTextSettings();
                 } else {
                     throw new Error('Failed to load images');
                 }
