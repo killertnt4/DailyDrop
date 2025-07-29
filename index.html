@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DailyDrop - Professional Slide Editor</title>
-    <meta name="description" content="Professional TikTok slide editor for creating stunning vertical content with text overlays">
+    <title>DailyDrop - Professional TikTok Slide Editor</title>
+    <meta name="description" content="Professional TikTok slide editor with server-hosted image gallery and TikTok-style text overlays">
     <meta name="keywords" content="TikTok, slide editor, video content, text overlay, DailyDrop">
     <meta name="author" content="DailyDrop">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzNiODJmNiIvPgo8cGF0aCBkPSJNOCA3SDE2VjI1SDhWN1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xOCA3SDI0VjEzSDE4VjdaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTggMTlIMjRWMjVIMThWMTlaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzNiODJmNiIvPgo8cGF0aCBkPSJNOCA3SDE2VjI1SDhWN1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xOCAxOEgyNFYxM0gxOFY3WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTE4IDE5SDI0VjI1SDE4VjE5WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==">
     
     <!-- External Resources -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,7 +18,7 @@
     <!-- TikTok Sans Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=TikTok+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -81,6 +81,21 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* TikTok Classic Text Style */
+        .tiktok-classic-text {
+            font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+            font-weight: 600;
+            color: #000;
+            background: #fff;
+            border-radius: 32px;
+            padding: 12px 28px;
+            display: inline-block;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
         .glass-card {
             background: rgba(26, 26, 46, 0.8);
             backdrop-filter: blur(20px);
@@ -88,30 +103,28 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
-        /* DYNAMIC CANVAS - NO MORE CROPPING OR BLACK BARS! */
+        /* 3:4 Aspect Ratio Canvas Container */
         #canvas-container { 
             position: relative; 
             margin: 0 auto; 
             overflow: hidden; 
             width: 100%;
-            max-width: 540px;
-            background: transparent;
+            max-width: 405px; /* 3:4 ratio: 405x540 */
+            aspect-ratio: 3/4;
+            background: #333;
             border-radius: 16px;
-            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 400px;
         }
 
         canvas { 
             width: 100%;
-            height: auto;
-            max-height: 960px;
+            height: 100%;
+            object-fit: contain;
             display: block; 
             border-radius: 16px;
             border: none;
-            background-color: transparent;
         }
 
         .control-card {
@@ -128,113 +141,112 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
-        #file-input { display: none; }
-
-        #file-drop-area { 
-            border: 2px dashed var(--accent-primary); 
-            border-radius: 12px; 
-            padding: 40px; 
-            text-align: center; 
-            cursor: pointer; 
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
-            margin-bottom: 1.5rem;
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
-        #file-drop-area:hover { 
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-            border-color: var(--accent-secondary);
-            transform: scale(1.02);
-        }
-
-        #file-drop-area.drag-over {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
-            border-color: var(--success);
-            transform: scale(1.05);
-        }
-
-        .image-thumbnail {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border: 2px solid transparent;
-            cursor: move;
+        .gallery-image {
+            position: relative;
+            aspect-ratio: 3/4;
             border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
             transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
-        .image-thumbnail:hover {
-            transform: scale(1.1);
+        .gallery-image:hover {
+            transform: scale(1.05);
             border-color: var(--accent-primary);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        .image-thumbnail.active {
+        .gallery-image.selected {
             border-color: var(--success);
             box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
         }
 
-        .text-element-item {
+        .gallery-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-image .image-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+            padding: 8px;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .slide-navigation {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .slide-nav-btn {
+            padding: 8px 16px;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .slide-nav-btn:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .slide-nav-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
             padding: 12px;
-            transition: all 0.3s ease;
-            margin-bottom: 8px;
-        }
-
-        .text-element-item:hover {
-            background: var(--bg-tertiary);
-            border-color: var(--accent-primary);
-        }
-
-        .text-element-item.live-editing {
-            border: 2px solid var(--success);
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        #text-content.live {
-            border-color: var(--success);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        .slide-group {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 8px;
             margin-bottom: 16px;
-            transition: all 0.3s ease;
+            font-size: 14px;
+            display: none;
         }
 
-        .slide-group.active {
-            border-color: var(--accent-primary);
-            background: rgba(59, 130, 246, 0.1);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
-        }
-
-        .slide-group.drag-over {
-            border-color: var(--success);
+        .success-banner {
             background: rgba(16, 185, 129, 0.1);
-            transform: scale(1.02);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
-        }
-
-        .unassigned-images {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
-            border: 2px dashed var(--warning);
-            border-radius: 12px;
-            padding: 16px;
+            border: 1px solid var(--success);
+            color: #6ee7b7;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 8px;
             font-weight: 500;
             cursor: pointer;
@@ -289,12 +301,6 @@
             box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
         }
 
-        .btn-success:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         .input-field {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
@@ -302,6 +308,7 @@
             padding: 10px 12px;
             color: var(--text-primary);
             transition: all 0.3s ease;
+            width: 100%;
         }
 
         .input-field:focus {
@@ -318,6 +325,7 @@
             background: var(--bg-secondary);
             outline: none;
             transition: all 0.3s ease;
+            width: 100%;
         }
 
         .slider::-webkit-slider-thumb {
@@ -332,43 +340,13 @@
             transition: all 0.3s ease;
         }
 
-        .slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
-        }
-
-        .slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            cursor: pointer;
-            border: none;
-        }
-
-        .preset-buttons {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-        }
-
-        .preset-btn {
-            background: rgba(59, 130, 246, 0.2);
-            border: 1px solid var(--accent-primary);
-            color: var(--accent-primary);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .preset-btn:hover {
-            background: var(--accent-primary);
-            color: white;
-            transform: translateY(-1px);
+        .section-header {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .header-brand {
@@ -384,52 +362,6 @@
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-
-        .live-indicator {
-            background: linear-gradient(135deg, var(--success), #059669);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 500;
-            margin-bottom: 16px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        .section-header {
-            color: var(--text-primary);
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--danger);
-            color: #fca5a5;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-
-        .success-message {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--success);
-            color: #6ee7b7;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 14px;
         }
 
         /* Mobile Responsive */
@@ -448,44 +380,30 @@
 
             #canvas-container {
                 max-width: 100%;
-                min-height: 300px;
             }
 
-            .preset-buttons {
-                justify-content: center;
+            .image-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 8px;
+                padding: 12px;
             }
         }
 
-        /* Print Styles */
-        @media print {
-            body {
-                background: white;
-                color: black;
-            }
-            
-            .control-card {
-                border: 1px solid #ccc;
-                background: white;
-            }
+        /* Error states */
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
         }
 
-        /* Accessibility */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        /* High Contrast Mode */
-        @media (prefers-contrast: high) {
-            :root {
-                --border-color: #ffffff;
-                --text-primary: #ffffff;
-                --bg-primary: #000000;
-                --bg-secondary: #111111;
-            }
+        .retry-btn {
+            margin-top: 16px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -496,51 +414,41 @@
     </div>
 
     <div class="max-w-7xl mx-auto p-4 md:p-6">
-        <!-- Header with DailyDrop Branding -->
+        <!-- Header -->
         <header class="header-brand">
             <div>
                 <h1 class="brand-text">DailyDrop</h1>
-                <p class="text-gray-400 text-sm font-medium">Professional Slide Editor</p>
+                <p class="text-gray-400 text-sm font-medium">Professional TikTok Slide Editor</p>
             </div>
         </header>
 
         <!-- Error/Success Messages -->
-        <div id="message-container"></div>
+        <div id="error-banner" class="error-banner"></div>
+        <div id="success-banner" class="success-banner"></div>
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Upload Panel -->
+            <!-- Image Gallery Panel -->
             <section class="control-card order-1">
-                <h2 class="section-header">📸 Upload & Organize</h2>
-                <div id="file-drop-area" class="mb-6" role="button" tabindex="0" aria-label="Upload images">
-                    <div class="text-center">
-                        <div class="text-4xl mb-3">📁</div>
-                        <p class="text-gray-300 font-medium mb-1">Drag & drop images here</p>
-                        <p class="text-sm text-gray-500">or click to browse</p>
+                <h2 class="section-header">📸 Select Images</h2>
+                
+                <!-- Slide Navigation -->
+                <div id="slide-navigation" class="slide-navigation">
+                    <div class="error-state" id="gallery-loading">
+                        <div class="text-sm">Loading image gallery...</div>
                     </div>
-                    <input type="file" id="file-input" accept="image/*" multiple aria-label="Select image files">
                 </div>
                 
-                <!-- Unassigned Images -->
-                <div id="unassigned-section" class="unassigned-images mb-6" style="display: none;" role="region" aria-label="Unassigned images">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-semibold text-amber-300">📋 Unassigned Images</h3>
+                <!-- Image Gallery -->
+                <div id="image-gallery" class="image-gallery">
+                    <div class="error-state">
+                        <div class="text-sm">Select a slide to view images</div>
                     </div>
-                    <div id="unassigned-images" class="flex flex-wrap gap-2"></div>
                 </div>
 
-                <div class="mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-semibold text-gray-200">🎬 Slides</h3>
-                        <button id="create-slide-btn" class="btn-primary" aria-label="Create new slide">+ New Slide</button>
-                    </div>
-                    <div id="slides-container" class="space-y-4 max-h-96 overflow-y-auto" role="region" aria-label="Slides list">
-                        <p class="text-gray-500 text-center py-8">Create your first slide</p>
-                    </div>
-                </div>
-                
-                <div class="mb-6">
+                <!-- Canvas Background -->
+                <div class="mt-6">
                     <label for="canvas-bg" class="block text-sm font-medium text-gray-300 mb-2">Canvas Background:</label>
-                    <select id="canvas-bg" class="input-field w-full">
+                    <select id="canvas-bg" class="input-field">
                         <option value="#000000">Black</option>
                         <option value="#ffffff">White</option>
                         <option value="#f3f4f6">Light Gray</option>
@@ -552,12 +460,8 @@
                     </select>
                 </div>
                 
-                <button id="export-all" class="btn-success w-full flex items-center justify-center gap-3" aria-label="Export all slides">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-                        <path fill-rule="evenodd" d="M9.293 13.293a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V4a1 1 0 10-2 0v6.586L7.707 8.707a1 1 0 00-1.414 1.414l3 3z" clip-rule="evenodd" />
-                    </svg>
-                    Export All Slides
+                <button id="export-current" class="btn-success w-full mt-6" aria-label="Export current slide">
+                    Export Current Slide
                 </button>
             </section>
 
@@ -566,1115 +470,952 @@
                 <h2 class="section-header">🎨 Edit Image</h2>
                 <div class="mb-4 p-4 bg-blue-900/30 rounded-lg border border-blue-500/30">
                     <div class="text-sm text-blue-200 font-medium" id="current-info">
-                        Select a slide and image to start editing
+                        Select an image from the gallery to start editing
                     </div>
                 </div>
 
                 <div id="canvas-container" class="mb-6" role="img" aria-label="Image editor canvas">
-                    <canvas id="editor-canvas" width="1080" height="1920" aria-label="Slide editing area"></canvas>
+                    <canvas id="editor-canvas" width="1080" height="1440" aria-label="Slide editing area"></canvas>
                 </div>
                 
                 <nav class="flex justify-between gap-4" aria-label="Image navigation">
-                    <button id="prev-image" class="btn-primary flex-1" aria-label="Previous image">← Prev Image</button>
-                    <button id="next-image" class="btn-primary flex-1" aria-label="Next image">Next Image →</button>
+                    <button id="prev-image" class="btn-primary flex-1" aria-label="Previous image">← Previous</button>
+                    <button id="next-image" class="btn-primary flex-1" aria-label="Next image">Next →</button>
                 </nav>
             </section>
 
-            <!-- Text Controls Panel -->
+            <!-- Text Controls Panel with TikTok Style -->
             <section class="control-card order-2 lg:order-3">
-                <h2 class="section-header">✍️ Add Text</h2>
+                <h2 class="section-header">✍️ Add TikTok Text</h2>
                 
-                <div id="live-editing-indicator" class="live-indicator hidden">
-                    <span>🎨 Live Editing Mode - Changes apply instantly!</span>
+                <!-- TikTok Style Presets -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">TikTok Style Presets:</label>
+                    <div class="flex gap-2 flex-wrap">
+                        <button class="preset-btn" data-preset="classic">Classic (Black on White)</button>
+                        <button class="preset-btn" data-preset="bold">Bold White</button>
+                        <button class="preset-btn" data-preset="colorful">Colorful</button>
+                    </div>
                 </div>
                 
                 <div class="mb-4">
                     <label for="text-content" class="block text-sm font-medium text-gray-300 mb-2">Text Content:</label>
-                    <textarea id="text-content" class="input-field w-full transition-all" rows="4" placeholder="Enter text for current image...&#10;Use Enter for new lines" aria-describedby="text-help"></textarea>
-                    <div id="text-help" class="text-xs text-gray-500 mt-1">Press Enter to create new lines</div>
+                    <textarea id="text-content" class="input-field" rows="4" placeholder="Enter your TikTok text...&#10;Use Enter for new lines"></textarea>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="font-size" class="block text-sm font-medium text-gray-300 mb-2">Font Size:</label>
-                        <input type="range" id="font-size" min="10" max="150" value="48" class="slider w-full" aria-describedby="font-size-value">
-                        <span id="font-size-value" class="text-sm text-gray-400">48px</span>
+                        <input type="range" id="font-size" min="20" max="120" value="60" class="slider">
+                        <span id="font-size-value" class="text-sm text-gray-400">60px</span>
                     </div>
                     <div>
                         <label for="line-height" class="block text-sm font-medium text-gray-300 mb-2">Line Height:</label>
-                        <input type="range" id="line-height" min="0.8" max="2.5" step="0.1" value="1.2" class="slider w-full" aria-describedby="line-height-value">
+                        <input type="range" id="line-height" min="1.0" max="2.0" step="0.1" value="1.2" class="slider">
                         <span id="line-height-value" class="text-sm text-gray-400">1.2x</span>
                     </div>
                 </div>
                 
                 <div class="mb-4">
-                    <label for="vertical-adjust" class="block text-sm font-medium text-gray-300 mb-2">Vertical Position:</label>
-                    <div class="preset-buttons" role="group" aria-label="Position presets">
-                        <button class="preset-btn" data-position="350" aria-label="Top position">Top</button>
-                        <button class="preset-btn" data-position="680" aria-label="Middle position">Middle</button>
-                        <button class="preset-btn" data-position="1000" aria-label="Bottom position">Bottom</button>
+                    <label for="vertical-position" class="block text-sm font-medium text-gray-300 mb-2">Vertical Position:</label>
+                    <div class="flex gap-2 mb-2">
+                        <button class="btn-secondary" data-position="top">Top</button>
+                        <button class="btn-secondary" data-position="middle">Middle</button>
+                        <button class="btn-secondary" data-position="bottom">Bottom</button>
                     </div>
-                    <input type="range" id="vertical-adjust" min="0" max="1920" value="751" class="slider w-full" aria-describedby="vertical-value">
-                    <span id="vertical-value" class="text-sm text-gray-400">751px</span>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="text-opacity" class="block text-sm font-medium text-gray-300 mb-2">Opacity:</label>
-                        <input type="range" id="text-opacity" min="0" max="100" value="100" class="slider w-full" aria-describedby="opacity-value">
-                        <span id="opacity-value" class="text-sm text-gray-400">100%</span>
-                    </div>
-                    <div>
-                        <label for="outline-width" class="block text-sm font-medium text-gray-300 mb-2">Outline Width:</label>
-                        <input type="range" id="outline-width" min="0" max="20" value="7" class="slider w-full" aria-describedby="outline-value">
-                        <span id="outline-value" class="text-sm text-gray-400">7px</span>
-                    </div>
+                    <input type="range" id="vertical-position" min="100" max="1340" value="720" class="slider">
+                    <span id="vertical-value" class="text-sm text-gray-400">720px</span>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="text-color" class="block text-sm font-medium text-gray-300 mb-2">Text Color:</label>
-                        <input type="color" id="text-color" value="#ffffff" class="input-field w-full h-12" aria-label="Text color picker">
+                        <input type="color" id="text-color" value="#000000" class="input-field h-12">
                     </div>
                     <div>
-                        <label for="outline-color" class="block text-sm font-medium text-gray-300 mb-2">Outline Color:</label>
-                        <input type="color" id="outline-color" value="#000000" class="input-field w-full h-12" aria-label="Outline color picker">
+                        <label for="bg-color" class="block text-sm font-medium text-gray-300 mb-2">Background Color:</label>
+                        <input type="color" id="bg-color" value="#ffffff" class="input-field h-12">
                     </div>
                 </div>
                 
-                <div class="mb-4">
-                    <label for="font-family" class="block text-sm font-medium text-gray-300 mb-2">Font Family:</label>
-                    <select id="font-family" class="input-field w-full">
-                        <option value="TikTok Sans" selected>TikTok Sans</option>
-                        <option value="Poppins">Poppins</option>
-                        <option value="Arial">Arial</option>
-                        <option value="Helvetica">Helvetica</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Courier New">Courier New</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Impact">Impact</option>
-                        <option value="Arial Black">Arial Black</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="font-family" class="block text-sm font-medium text-gray-300 mb-2">Font:</label>
+                        <select id="font-family" class="input-field">
+                            <option value="Montserrat" selected>Montserrat (TikTok Style)</option>
+                            <option value="Poppins">Poppins</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Impact">Impact</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="font-weight" class="block text-sm font-medium text-gray-300 mb-2">Weight:</label>
+                        <select id="font-weight" class="input-field">
+                            <option value="400">Normal</option>
+                            <option value="600" selected>Semi Bold</option>
+                            <option value="700">Bold</option>
+                        </select>
+                    </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label for="text-align" class="block text-sm font-medium text-gray-300 mb-2">Text Alignment:</label>
-                        <select id="text-align" class="input-field w-full">
+                        <label for="text-align" class="block text-sm font-medium text-gray-300 mb-2">Alignment:</label>
+                        <select id="text-align" class="input-field">
                             <option value="left">Left</option>
                             <option value="center" selected>Center</option>
                             <option value="right">Right</option>
                         </select>
                     </div>
                     <div>
-                        <label for="font-weight" class="block text-sm font-medium text-gray-300 mb-2">Font Weight:</label>
-                        <select id="font-weight" class="input-field w-full">
-                            <option value="400" selected>Normal</option>
-                            <option value="600">Semi Bold</option>
-                            <option value="700">Bold</option>
-                            <option value="900">Extra Bold</option>
-                        </select>
+                        <label for="border-radius" class="block text-sm font-medium text-gray-300 mb-2">Corner Radius:</label>
+                        <input type="range" id="border-radius" min="0" max="50" value="32" class="slider">
+                        <span id="radius-value" class="text-sm text-gray-400">32px</span>
                     </div>
                 </div>
                 
-                <div class="flex gap-3 mb-6">
-                    <button id="add-text" class="btn-primary flex-1">Add Text Layer</button>
-                    <button id="done-editing" class="btn-success flex-1 hidden">Done</button>
+                <div class="flex gap-3 mb-4">
+                    <button id="add-text" class="btn-primary flex-1">Add Text</button>
+                    <button id="preview-text" class="btn-secondary flex-1">Preview</button>
                 </div>
                 
-                <div id="text-elements-list" class="space-y-2 max-h-64 overflow-y-auto" role="region" aria-label="Text layers list">
-                    <p class="text-gray-500 text-center py-6">No text layers for current image</p>
+                <div id="text-layers" class="space-y-2 max-h-48 overflow-y-auto">
+                    <p class="text-gray-500 text-center py-4">No text layers added</p>
                 </div>
             </section>
         </main>
     </div>
 
     <script>
-        // Global error handling
-        window.addEventListener('error', function(e) {
-            console.error('Application error:', e.error);
-            showMessage('An unexpected error occurred. Please refresh the page if issues persist.', 'error');
+        // Enhanced error handling and logging
+        class ErrorHandler {
+            static log(error, context = '') {
+                console.error(`[${context}] Error:`, error);
+                this.showUserMessage(`Error: ${error.message || 'Something went wrong'}`, 'error');
+            }
+
+            static showUserMessage(message, type = 'info') {
+                const banner = document.getElementById(type === 'error' ? 'error-banner' : 'success-banner');
+                if (banner) {
+                    banner.textContent = message;
+                    banner.style.display = 'block';
+                    setTimeout(() => {
+                        banner.style.display = 'none';
+                    }, 5000);
+                }
+            }
+
+            static async retry(asyncFunction, maxAttempts = 3, delay = 1000) {
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    try {
+                        return await asyncFunction();
+                    } catch (error) {
+                        if (attempt === maxAttempts) {
+                            throw error;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, delay * attempt));
+                    }
+                }
+            }
+        }
+
+        // Global error handlers
+        window.addEventListener('error', (e) => {
+            ErrorHandler.log(e.error, 'Global');
         });
 
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('Unhandled promise rejection:', e.reason);
-            showMessage('An error occurred while processing. Please try again.', 'error');
+        window.addEventListener('unhandledrejection', (e) => {
+            ErrorHandler.log(new Error(e.reason), 'Promise');
         });
 
         // Application state
-        const canvas = document.getElementById('editor-canvas');
-        const ctx = canvas.getContext('2d');
-        let slides = [];
-        let unassignedImages = [];
-        let currentSlideIndex = null;
-        let currentImageIndex = null;
-        let selectedTextIndex = null;
-        let isLiveEditing = false;
-        let isExporting = false;
+        const AppState = {
+            images: new Map(), // slideNumber -> [image1, image2, ...]
+            currentSlide: 1,
+            currentImageIndex: 0,
+            textLayers: [],
+            isLoading: false,
+            canvas: null,
+            ctx: null,
 
-        // UI Elements
-        const elements = {
-            textContent: document.getElementById('text-content'),
-            fontSizeSlider: document.getElementById('font-size'),
-            lineHeightSlider: document.getElementById('line-height'),
-            verticalSlider: document.getElementById('vertical-adjust'),
-            textColor: document.getElementById('text-color'),
-            outlineColor: document.getElementById('outline-color'),
-            outlineWidth: document.getElementById('outline-width'),
-            fontFamily: document.getElementById('font-family'),
-            textAlign: document.getElementById('text-align'),
-            fontWeight: document.getElementById('font-weight'),
-            textOpacity: document.getElementById('text-opacity'),
-            canvasBg: document.getElementById('canvas-bg'),
-            fileInput: document.getElementById('file-input'),
-            fileDropArea: document.getElementById('file-drop-area'),
-            slidesContainer: document.getElementById('slides-container'),
-            unassignedSection: document.getElementById('unassigned-section'),
-            unassignedImagesContainer: document.getElementById('unassigned-images'),
-            currentInfo: document.getElementById('current-info'),
-            createSlideBtn: document.getElementById('create-slide-btn'),
-            addTextBtn: document.getElementById('add-text'),
-            doneEditingBtn: document.getElementById('done-editing'),
-            liveEditingIndicator: document.getElementById('live-editing-indicator'),
-            loadingScreen: document.getElementById('loading-screen'),
-            messageContainer: document.getElementById('message-container')
+            init() {
+                try {
+                    this.canvas = document.getElementById('editor-canvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    if (!this.canvas || !this.ctx) {
+                        throw new Error('Canvas initialization failed');
+                    }
+                } catch (error) {
+                    ErrorHandler.log(error, 'AppState.init');
+                    throw error;
+                }
+            },
+
+            setCurrentImage(slideNumber, imageIndex) {
+                try {
+                    if (!this.images.has(slideNumber)) {
+                        throw new Error(`Slide ${slideNumber} not found`);
+                    }
+                    const slideImages = this.images.get(slideNumber);
+                    if (imageIndex >= slideImages.length || imageIndex < 0) {
+                        throw new Error(`Image index ${imageIndex} out of range`);
+                    }
+                    this.currentSlide = slideNumber;
+                    this.currentImageIndex = imageIndex;
+                    this.textLayers = []; // Reset text layers when changing image
+                } catch (error) {
+                    ErrorHandler.log(error, 'AppState.setCurrentImage');
+                }
+            },
+
+            getCurrentImage() {
+                try {
+                    const slideImages = this.images.get(this.currentSlide);
+                    if (!slideImages || !slideImages[this.currentImageIndex]) {
+                        return null;
+                    }
+                    return slideImages[this.currentImageIndex];
+                } catch (error) {
+                    ErrorHandler.log(error, 'AppState.getCurrentImage');
+                    return null;
+                }
+            }
         };
 
-        // Utility functions
-        function showMessage(message, type = 'info') {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `${type === 'error' ? 'error-message' : 'success-message'}`;
-            messageDiv.textContent = message;
-            
-            elements.messageContainer.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.parentNode.removeChild(messageDiv);
-                }
-            }, 5000);
-        }
+        // Image loader with GitHub integration
+        class ImageLoader {
+            static BASE_PATH = './drive-download-20250729T142247Z-1-001';
+            static SLIDE_COUNT = 10;
+            static IMAGES_PER_SLIDE = 6;
+            static SUPPORTED_FORMATS = ['.jpg', '.jpeg', '.png', '.webp'];
 
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
+            static async loadSlideImages(slideNumber) {
+                try {
+                    const images = [];
+                    const loadPromises = [];
 
-        // Vertical position presets
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const position = parseInt(btn.getAttribute('data-position'));
-                elements.verticalSlider.value = position;
-                document.getElementById('vertical-value').textContent = `${position}px`;
-                if (isLiveEditing) {
-                    drawCurrentImage();
-                }
-            });
-        });
-
-        // Image and slide data structures
-        class ImageData {
-            constructor(img, filename) {
-                this.img = img;
-                this.filename = filename;
-                this.textElements = [];
-                this.id = Date.now() + Math.random();
-            }
-        }
-
-        class Slide {
-            constructor(slideNumber) {
-                this.name = `Slide ${slideNumber}`;
-                this.images = [];
-                this.id = Date.now() + Math.random();
-            }
-
-            addImage(imageData) {
-                this.images.push(imageData);
-            }
-
-            removeImage(imageData) {
-                const index = this.images.indexOf(imageData);
-                if (index > -1) {
-                    this.images.splice(index, 1);
-                }
-            }
-        }
-
-        // Initialize canvas
-        function initializeCanvas() {
-            try {
-                const bgColor = elements.canvasBg.value;
-                ctx.fillStyle = bgColor;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = bgColor === '#000000' ? '#ffffff' : '#000000';
-                ctx.font = '24px Poppins';
-                ctx.textAlign = 'center';
-                ctx.fillText('Upload images to begin', canvas.width/2, canvas.height/2);
-            } catch (error) {
-                console.error('Canvas initialization error:', error);
-                showMessage('Canvas initialization failed', 'error');
-            }
-        }
-
-        // DYNAMIC CANVAS SIZING - NO MORE CROPPING OR BLACK BARS!
-        function resizeCanvasToImage(img) {
-            const MAX_W = 1080;
-            const MAX_H = 1920;
-            const imgRatio = img.width / img.height;
-            const maxRatio = MAX_W / MAX_H;
-
-            let newW, newH;
-            if (imgRatio > maxRatio) {
-                // Image is wider - fit to max width
-                newW = MAX_W;
-                newH = MAX_W / imgRatio;
-            } else {
-                // Image is taller - fit to max height  
-                newH = MAX_H;
-                newW = MAX_H * imgRatio;
-            }
-
-            canvas.width = newW;
-            canvas.height = newH;
-        }
-
-        function drawImageWithAspectRatio(img) {
-            try {
-                // Resize canvas to perfectly match image aspect ratio
-                resizeCanvasToImage(img);
-                
-                // Clear the canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Optional background (usually transparent now)
-                const bg = elements.canvasBg.value;
-                if (bg !== 'transparent') {
-                    ctx.fillStyle = bg;
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                }
-                
-                // Draw the image to fill the entire canvas perfectly
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-            } catch (error) {
-                console.error('Image drawing error:', error);
-                showMessage('Failed to draw image', 'error');
-            }
-        }
-
-        // Enhanced text rendering
-        function drawMultilineText(text, x, y, fontSize, fontFamily, fontWeight, color, align, opacity, outlineColor, outlineWidth, lineHeight) {
-            if (!text) return;
-            
-            try {
-                const lines = text.split('\n');
-                const actualLineHeight = fontSize * lineHeight;
-                
-                ctx.globalAlpha = opacity;
-                ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-                ctx.textAlign = align;
-                
-                const totalTextHeight = (lines.length - 1) * actualLineHeight;
-                let startY = y - (totalTextHeight / 2);
-                
-                lines.forEach((line, index) => {
-                    const currentY = startY + (index * actualLineHeight);
-                    
-                    if (outlineWidth > 0) {
-                        ctx.strokeStyle = outlineColor;
-                        ctx.lineWidth = outlineWidth;
-                        ctx.strokeText(line, x, currentY);
+                    for (let i = 1; i <= this.IMAGES_PER_SLIDE; i++) {
+                        for (const format of this.SUPPORTED_FORMATS) {
+                            const imagePath = `${this.BASE_PATH}/${slideNumber}/${i}${format}`;
+                            
+                            const promise = this.loadSingleImage(imagePath)
+                                .then(img => {
+                                    if (img) {
+                                        images[i - 1] = {
+                                            img,
+                                            path: imagePath,
+                                            slideNumber,
+                                            imageNumber: i
+                                        };
+                                    }
+                                })
+                                .catch(() => {
+                                    // Silently handle missing images with different formats
+                                });
+                            
+                            loadPromises.push(promise);
+                        }
                     }
-                    
-                    ctx.fillStyle = color;
-                    ctx.fillText(line, x, currentY);
-                });
-                
-                ctx.globalAlpha = 1;
-            } catch (error) {
-                console.error('Text rendering error:', error);
-            }
-        }
 
-        function drawCurrentImage() {
-            try {
-                if (currentSlideIndex === null || currentImageIndex === null || 
-                    !slides[currentSlideIndex] || !slides[currentSlideIndex].images[currentImageIndex]) {
-                    
-                    // Default canvas setup when no image selected
-                    ctx.fillStyle = elements.canvasBg.value;
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = elements.canvasBg.value === '#000000' ? '#ffffff' : '#000000';
-                    ctx.font = '24px Poppins';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Select an image to edit', canvas.width/2, canvas.height/2);
-                    return;
+                    await Promise.all(loadPromises);
+                    return images.filter(Boolean); // Remove undefined entries
+                } catch (error) {
+                    ErrorHandler.log(error, `ImageLoader.loadSlideImages(${slideNumber})`);
+                    return [];
                 }
-
-                const currentImageData = slides[currentSlideIndex].images[currentImageIndex];
-                
-                // Draw image with dynamic sizing (no cropping!)
-                drawImageWithAspectRatio(currentImageData.img);
-                
-                // Draw text elements for current image only
-                currentImageData.textElements.forEach((el) => {
-                    if (!el.text) return;
-                    
-                    let xPos;
-                    if (el.align === 'left') xPos = 50;
-                    else if (el.align === 'right') xPos = canvas.width - 50;
-                    else xPos = canvas.width / 2;
-                    
-                    drawMultilineText(
-                        el.text, xPos, el.y, el.size, el.fontFamily, 
-                        el.fontWeight, el.color, el.align, el.opacity, 
-                        el.outlineColor, el.outlineWidth, el.lineHeight
-                    );
-                });
-                
-                // If in live editing mode, draw the current text being edited
-                if (isLiveEditing && elements.textContent.value.trim()) {
-                    const currentText = elements.textContent.value.trim();
-                    const size = parseInt(elements.fontSizeSlider.value);
-                    const y = parseInt(elements.verticalSlider.value);
-                    const color = elements.textColor.value;
-                    const outlineColorVal = elements.outlineColor.value;
-                    const outlineWidthVal = parseInt(elements.outlineWidth.value);
-                    const fontFamilyVal = elements.fontFamily.value;
-                    const fontWeightVal = elements.fontWeight.value;
-                    const align = elements.textAlign.value;
-                    const opacity = parseInt(elements.textOpacity.value) / 100;
-                    const lineHeightVal = parseFloat(elements.lineHeightSlider.value);
-                    
-                    let xPos;
-                    if (align === 'left') xPos = 50;
-                    else if (align === 'right') xPos = canvas.width - 50;
-                    else xPos = canvas.width / 2;
-                    
-                    drawMultilineText(
-                        currentText, xPos, y, size, fontFamilyVal, 
-                        fontWeightVal, color, align, opacity, 
-                        outlineColorVal, outlineWidthVal, lineHeightVal
-                    );
-                }
-
-                updateCurrentInfo();
-            } catch (error) {
-                console.error('Draw current image error:', error);
-                showMessage('Failed to render image', 'error');
             }
-        }
 
-        function updateCurrentInfo() {
-            if (currentSlideIndex === null || !slides[currentSlideIndex]) {
-                elements.currentInfo.textContent = 'No slide selected';
-                return;
-            }
-            
-            const slide = slides[currentSlideIndex];
-            if (currentImageIndex === null || !slide.images[currentImageIndex]) {
-                elements.currentInfo.textContent = `${slide.name} - No image selected`;
-                return;
-            }
-            
-            const imageData = slide.images[currentImageIndex];
-            const filename = imageData?.filename || 'Unknown';
-            
-            elements.currentInfo.innerHTML = `
-                <strong>${slide.name}</strong> • 
-                Image ${currentImageIndex + 1} of ${slide.images.length} • 
-                ${filename}
-            `;
-        }
-
-        // Canvas background change handler
-        elements.canvasBg.addEventListener('change', drawCurrentImage);
-
-        // Load images with validation
-        function loadImages(files) {
-            if (!files || files.length === 0) return;
-            
-            let loadedCount = 0;
-            const newImages = [];
-            const maxFileSize = 10 * 1024 * 1024; // 10MB
-            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            
-            Array.from(files).forEach((file, index) => {
-                // Validate file
-                if (!validTypes.includes(file.type)) {
-                    showMessage(`Skipped ${file.name}: Invalid file type. Use JPEG, PNG, GIF, or WebP.`, 'error');
-                    return;
-                }
-                
-                if (file.size > maxFileSize) {
-                    showMessage(`Skipped ${file.name}: File too large. Maximum size is 10MB.`, 'error');
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = e => {
+            static loadSingleImage(path) {
+                return new Promise((resolve) => {
                     const img = new Image();
-                    img.onload = () => {
-                        newImages.push(new ImageData(img, file.name));
-                        loadedCount++;
-                        
-                        if (loadedCount === Array.from(files).filter(f => 
-                            validTypes.includes(f.type) && f.size <= maxFileSize
-                        ).length) {
-                            unassignedImages.push(...newImages);
-                            renderUnassignedImages();
-                            renderSlidesUI();
-                            showMessage(`Successfully loaded ${newImages.length} images`, 'success');
-                        }
-                    };
-                    img.onerror = () => {
-                        showMessage(`Failed to load ${file.name}`, 'error');
-                    };
-                    img.src = e.target.result;
-                };
-                reader.onerror = () => {
-                    showMessage(`Failed to read ${file.name}`, 'error');
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Create new slide with auto-numbering
-        elements.createSlideBtn.addEventListener('click', () => {
-            try {
-                const slideNumber = slides.length + 1;
-                slides.push(new Slide(slideNumber));
-                renderSlidesUI();
-                showMessage(`Created ${slides[slides.length - 1].name}`, 'success');
-            } catch (error) {
-                console.error('Create slide error:', error);
-                showMessage('Failed to create slide', 'error');
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null);
+                    img.src = path;
+                });
             }
-        });
 
-        // Render unassigned images
-        function renderUnassignedImages() {
-            if (unassignedImages.length === 0) {
-                elements.unassignedSection.style.display = 'none';
-                return;
-            }
-            
-            elements.unassignedSection.style.display = 'block';
-            elements.unassignedImagesContainer.innerHTML = '';
-            
-            unassignedImages.forEach((imageData, index) => {
+            static async loadAllImages() {
                 try {
-                    const thumbCanvas = document.createElement('canvas');
-                    const thumbCtx = thumbCanvas.getContext('2d');
-                    thumbCanvas.width = 50;
-                    thumbCanvas.height = 50;
-                    
-                    // Draw thumbnail with aspect ratio
-                    const ratio = Math.min(thumbCanvas.width / imageData.img.width, thumbCanvas.height / imageData.img.height);
-                    const width = imageData.img.width * ratio;
-                    const height = imageData.img.height * ratio;
-                    const x = (thumbCanvas.width - width) / 2;
-                    const y = (thumbCanvas.height - height) / 2;
-                    
-                    thumbCtx.fillStyle = '#374151';
-                    thumbCtx.fillRect(0, 0, thumbCanvas.width, thumbCanvas.height);
-                    thumbCtx.drawImage(imageData.img, x, y, width, height);
-                    
-                    const thumb = document.createElement('img');
-                    thumb.className = 'image-thumbnail';
-                    thumb.src = thumbCanvas.toDataURL();
-                    thumb.title = imageData.filename;
-                    thumb.draggable = true;
-                    thumb.setAttribute('aria-label', `Unassigned image: ${imageData.filename}`);
-                    
-                    // Drag events for images
-                    thumb.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.setData('text/plain', index);
-                        e.dataTransfer.effectAllowed = 'move';
-                    });
-                    
-                    elements.unassignedImagesContainer.appendChild(thumb);
-                } catch (error) {
-                    console.error('Thumbnail creation error:', error);
-                }
-            });
-        }
+                    AppState.isLoading = true;
+                    this.updateLoadingState('Loading image gallery...');
 
-        // Render slides UI with drag & drop
-        function renderSlidesUI() {
-            elements.slidesContainer.innerHTML = '';
-            
-            if (slides.length === 0) {
-                elements.slidesContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Create your first slide</p>';
-                return;
+                    const loadPromises = [];
+                    for (let slide = 1; slide <= this.SLIDE_COUNT; slide++) {
+                        loadPromises.push(
+                            this.loadSlideImages(slide).then(images => {
+                                if (images.length > 0) {
+                                    AppState.images.set(slide, images);
+                                }
+                            })
+                        );
+                    }
+
+                    await Promise.all(loadPromises);
+                    
+                    if (AppState.images.size === 0) {
+                        throw new Error('No images could be loaded. Please check the image paths.');
+                    }
+
+                    ErrorHandler.showUserMessage(`Loaded ${AppState.images.size} slides successfully!`, 'success');
+                    return true;
+                } catch (error) {
+                    ErrorHandler.log(error, 'ImageLoader.loadAllImages');
+                    return false;
+                } finally {
+                    AppState.isLoading = false;
+                    this.updateLoadingState('');
+                }
             }
-            
-            slides.forEach((slide, slideIndex) => {
-                try {
-                    const slideDiv = document.createElement('div');
-                    slideDiv.className = `slide-group ${slideIndex === currentSlideIndex ? 'active' : ''}`;
-                    slideDiv.setAttribute('role', 'region');
-                    slideDiv.setAttribute('aria-label', `${slide.name} with ${slide.images.length} images`);
-                    
-                    // Make slide droppable
-                    slideDiv.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        slideDiv.classList.add('drag-over');
-                    });
-                    
-                    slideDiv.addEventListener('dragleave', () => {
-                        slideDiv.classList.remove('drag-over');
-                    });
-                    
-                    slideDiv.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        slideDiv.classList.remove('drag-over');
-                        
-                        const imageIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                        if (imageIndex >= 0 && imageIndex < unassignedImages.length) {
-                            const imageData = unassignedImages.splice(imageIndex, 1)[0];
-                            slide.addImage(imageData);
-                            renderUnassignedImages();
-                            renderSlidesUI();
-                            showMessage(`Added image to ${slide.name}`, 'success');
-                        }
-                    });
-                    
-                    const header = document.createElement('div');
-                    header.className = 'flex justify-between items-center mb-3';
-                    header.innerHTML = `
-                        <span class="font-semibold text-gray-200">${slide.name}</span>
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">${slide.images.length} images</span>
-                            <button class="btn-secondary text-red-400 hover:text-red-300" onclick="deleteSlide(${slideIndex})" aria-label="Delete ${slide.name}">Delete</button>
-                        </div>
-                    `;
-                    slideDiv.appendChild(header);
-                    
-                    const imagesDiv = document.createElement('div');
-                    imagesDiv.className = 'flex gap-3 flex-wrap';
-                    
-                    slide.images.forEach((imageData, imgIndex) => {
-                        try {
-                            const thumbCanvas = document.createElement('canvas');
-                            const thumbCtx = thumbCanvas.getContext('2d');
-                            thumbCanvas.width = 50;
-                            thumbCanvas.height = 50;
-                            
-                            const ratio = Math.min(thumbCanvas.width / imageData.img.width, thumbCanvas.height / imageData.img.height);
-                            const width = imageData.img.width * ratio;
-                            const height = imageData.img.height * ratio;
-                            const x = (thumbCanvas.width - width) / 2;
-                            const y = (thumbCanvas.height - height) / 2;
-                            
-                            thumbCtx.fillStyle = '#374151';
-                            thumbCtx.fillRect(0, 0, thumbCanvas.width, thumbCanvas.height);
-                            thumbCtx.drawImage(imageData.img, x, y, width, height);
-                            
-                            const thumb = document.createElement('img');
-                            thumb.className = `image-thumbnail ${
-                                slideIndex === currentSlideIndex && imgIndex === currentImageIndex ? 'active' : ''
-                            }`;
-                            thumb.src = thumbCanvas.toDataURL();
-                            thumb.title = imageData.filename;
-                            thumb.setAttribute('aria-label', `${imageData.filename} in ${slide.name}`);
-                            thumb.addEventListener('click', () => {
-                                currentSlideIndex = slideIndex;
-                                currentImageIndex = imgIndex;
-                                renderSlidesUI();
-                                drawCurrentImage();
-                                renderTextElementList();
-                            });
-                            
-                            imagesDiv.appendChild(thumb);
-                        } catch (error) {
-                            console.error('Slide thumbnail error:', error);
-                        }
-                    });
-                    
-                    slideDiv.appendChild(imagesDiv);
-                    elements.slidesContainer.appendChild(slideDiv);
-                } catch (error) {
-                    console.error('Slide rendering error:', error);
+
+            static updateLoadingState(message) {
+                const loadingDiv = document.getElementById('gallery-loading');
+                if (loadingDiv) {
+                    if (message) {
+                        loadingDiv.innerHTML = `<div class="text-sm">${message}</div>`;
+                        loadingDiv.style.display = 'block';
+                    } else {
+                        loadingDiv.style.display = 'none';
+                    }
                 }
-            });
+            }
         }
 
-        // Delete slide function (global scope for onclick)
-        window.deleteSlide = (slideIndex) => {
-            try {
-                if (confirm(`Delete ${slides[slideIndex].name}? Images will return to unassigned.`)) {
-                    const slide = slides[slideIndex];
-                    unassignedImages.push(...slide.images);
-                    slides.splice(slideIndex, 1);
+        // Canvas renderer with 3:4 aspect ratio enforcement
+        class CanvasRenderer {
+            static CANVAS_WIDTH = 1080;
+            static CANVAS_HEIGHT = 1440; // 3:4 ratio
+
+            static cropImageTo3x4(img) {
+                try {
+                    const targetRatio = 3 / 4;
+                    const imgRatio = img.width / img.height;
                     
-                    // Renumber remaining slides
-                    slides.forEach((slide, index) => {
-                        slide.name = `Slide ${index + 1}`;
-                    });
+                    let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
                     
-                    // Reset current selection if deleted slide was selected
-                    if (currentSlideIndex === slideIndex) {
-                        currentSlideIndex = null;
-                        currentImageIndex = null;
+                    if (imgRatio > targetRatio) {
+                        // Image is wider, crop width
+                        sourceWidth = img.height * targetRatio;
+                        sourceX = (img.width - sourceWidth) / 2;
+                    } else if (imgRatio < targetRatio) {
+                        // Image is taller, crop height
+                        sourceHeight = img.width / targetRatio;
+                        sourceY = (img.height - sourceHeight) / 2;
                     }
                     
-                    renderUnassignedImages();
-                    renderSlidesUI();
-                    drawCurrentImage();
-                    showMessage('Slide deleted successfully', 'success');
+                    return { sourceX, sourceY, sourceWidth, sourceHeight };
+                } catch (error) {
+                    ErrorHandler.log(error, 'CanvasRenderer.cropImageTo3x4');
+                    return { sourceX: 0, sourceY: 0, sourceWidth: img.width, sourceHeight: img.height };
                 }
-            } catch (error) {
-                console.error('Delete slide error:', error);
-                showMessage('Failed to delete slide', 'error');
             }
-        };
 
-        // Helper functions for text
-        function getCurrentImageData() {
-            if (currentSlideIndex === null || currentImageIndex === null || 
-                !slides[currentSlideIndex] || !slides[currentSlideIndex].images[currentImageIndex]) {
-                return null;
+            static drawImage(imageData) {
+                try {
+                    if (!imageData || !AppState.ctx) return;
+
+                    const { img } = imageData;
+                    AppState.canvas.width = this.CANVAS_WIDTH;
+                    AppState.canvas.height = this.CANVAS_HEIGHT;
+
+                    // Clear canvas
+                    AppState.ctx.fillStyle = document.getElementById('canvas-bg').value;
+                    AppState.ctx.fillRect(0, 0, AppState.canvas.width, AppState.canvas.height);
+
+                    // Crop and draw image to 3:4 ratio
+                    const cropData = this.cropImageTo3x4(img);
+                    AppState.ctx.drawImage(
+                        img,
+                        cropData.sourceX, cropData.sourceY, cropData.sourceWidth, cropData.sourceHeight,
+                        0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT
+                    );
+
+                } catch (error) {
+                    ErrorHandler.log(error, 'CanvasRenderer.drawImage');
+                }
             }
-            return slides[currentSlideIndex].images[currentImageIndex];
+
+            static drawTikTokText(textConfig) {
+                try {
+                    if (!textConfig.text || !AppState.ctx) return;
+
+                    const ctx = AppState.ctx;
+                    const {
+                        text, x, y, fontSize, fontFamily, fontWeight,
+                        textColor, backgroundColor, borderRadius, align, lineHeight
+                    } = textConfig;
+
+                    // Set font
+                    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                    ctx.textAlign = align;
+
+                    const lines = text.split('\n');
+                    const actualLineHeight = fontSize * lineHeight;
+                    const totalHeight = lines.length * actualLineHeight;
+
+                    // Calculate text dimensions for background
+                    let maxWidth = 0;
+                    lines.forEach(line => {
+                        const metrics = ctx.measureText(line);
+                        maxWidth = Math.max(maxWidth, metrics.width);
+                    });
+
+                    // Draw background pill/rectangle
+                    const padding = 28;
+                    const bgWidth = maxWidth + (padding * 2);
+                    const bgHeight = totalHeight + (padding);
+                    
+                    let bgX = x - bgWidth / 2;
+                    if (align === 'left') bgX = x - padding;
+                    if (align === 'right') bgX = x - bgWidth + padding;
+
+                    const bgY = y - totalHeight / 2 - padding / 2;
+
+                    ctx.fillStyle = backgroundColor;
+                    this.roundRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
+                    ctx.fill();
+
+                    // Draw text
+                    ctx.fillStyle = textColor;
+                    lines.forEach((line, index) => {
+                        const lineY = y - totalHeight / 2 + (index * actualLineHeight) + actualLineHeight / 2;
+                        ctx.fillText(line, x, lineY);
+                    });
+
+                } catch (error) {
+                    ErrorHandler.log(error, 'CanvasRenderer.drawTikTokText');
+                }
+            }
+
+            static roundRect(ctx, x, y, width, height, radius) {
+                try {
+                    ctx.beginPath();
+                    ctx.moveTo(x + radius, y);
+                    ctx.lineTo(x + width - radius, y);
+                    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                    ctx.lineTo(x + width, y + height - radius);
+                    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                    ctx.lineTo(x + radius, y + height);
+                    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                    ctx.lineTo(x, y + radius);
+                    ctx.quadraticCurveTo(x, y, x + radius, y);
+                    ctx.closePath();
+                } catch (error) {
+                    ErrorHandler.log(error, 'CanvasRenderer.roundRect');
+                }
+            }
+
+            static renderCurrentImage() {
+                try {
+                    const currentImage = AppState.getCurrentImage();
+                    if (!currentImage) {
+                        // Show placeholder
+                        AppState.ctx.fillStyle = document.getElementById('canvas-bg').value;
+                        AppState.ctx.fillRect(0, 0, AppState.canvas.width, AppState.canvas.height);
+                        AppState.ctx.fillStyle = '#666';
+                        AppState.ctx.font = '24px Poppins';
+                        AppState.ctx.textAlign = 'center';
+                        AppState.ctx.fillText('Select an image to edit', AppState.canvas.width / 2, AppState.canvas.height / 2);
+                        return;
+                    }
+
+                    this.drawImage(currentImage);
+
+                    // Draw text layers
+                    AppState.textLayers.forEach(textLayer => {
+                        this.drawTikTokText(textLayer);
+                    });
+
+                    UI.updateCurrentInfo();
+                } catch (error) {
+                    ErrorHandler.log(error, 'CanvasRenderer.renderCurrentImage');
+                }
+            }
         }
 
-        function readTextElementFromControls() {
-            return {
-                text: elements.textContent.value.trim(),
-                size: parseInt(elements.fontSizeSlider.value),
-                y: parseInt(elements.verticalSlider.value),
-                color: elements.textColor.value,
-                outlineColor: elements.outlineColor.value,
-                outlineWidth: parseInt(elements.outlineWidth.value),
-                fontFamily: elements.fontFamily.value,
-                fontWeight: elements.fontWeight.value,
-                align: elements.textAlign.value,
-                opacity: parseInt(elements.textOpacity.value) / 100,
-                lineHeight: parseFloat(elements.lineHeightSlider.value),
-                id: Date.now() + Math.random()
+        // UI Controller
+        class UI {
+            static renderSlideNavigation() {
+                try {
+                    const nav = document.getElementById('slide-navigation');
+                    if (!nav) return;
+
+                    nav.innerHTML = '';
+                    
+                    if (AppState.images.size === 0) {
+                        nav.innerHTML = '<div class="error-state"><div class="text-sm">No slides available</div></div>';
+                        return;
+                    }
+
+                    Array.from(AppState.images.keys()).sort((a, b) => a - b).forEach(slideNumber => {
+                        const btn = document.createElement('button');
+                        btn.className = `slide-nav-btn ${slideNumber === AppState.currentSlide ? 'active' : ''}`;
+                        btn.textContent = `Slide ${slideNumber}`;
+                        btn.onclick = () => this.selectSlide(slideNumber);
+                        nav.appendChild(btn);
+                    });
+                } catch (error) {
+                    ErrorHandler.log(error, 'UI.renderSlideNavigation');
+                }
+            }
+
+            static renderImageGallery() {
+                try {
+                    const gallery = document.getElementById('image-gallery');
+                    if (!gallery) return;
+
+                    const slideImages = AppState.images.get(AppState.currentSlide);
+                    if (!slideImages || slideImages.length === 0) {
+                        gallery.innerHTML = '<div class="error-state"><div class="text-sm">No images in this slide</div></div>';
+                        return;
+                    }
+
+                    gallery.innerHTML = '';
+                    slideImages.forEach((imageData, index) => {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.className = `gallery-image ${index === AppState.currentImageIndex ? 'selected' : ''}`;
+                        
+                        const img = document.createElement('img');
+                        img.src = imageData.img.src;
+                        img.alt = `Image ${index + 1}`;
+                        img.onerror = () => {
+                            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+RXJyb3I8L3RleHQ+PC9zdmc+';
+                        };
+
+                        const info = document.createElement('div');
+                        info.className = 'image-info';
+                        info.textContent = `${index + 1}`;
+
+                        imgDiv.appendChild(img);
+                        imgDiv.appendChild(info);
+                        imgDiv.onclick = () => this.selectImage(AppState.currentSlide, index);
+                        
+                        gallery.appendChild(imgDiv);
+                    });
+                } catch (error) {
+                    ErrorHandler.log(error, 'UI.renderImageGallery');
+                }
+            }
+
+            static selectSlide(slideNumber) {
+                try {
+                    AppState.currentSlide = slideNumber;
+                    AppState.currentImageIndex = 0;
+                    AppState.textLayers = [];
+                    this.renderSlideNavigation();
+                    this.renderImageGallery();
+                    CanvasRenderer.renderCurrentImage();
+                } catch (error) {
+                    ErrorHandler.log(error, 'UI.selectSlide');
+                }
+            }
+
+            static selectImage(slideNumber, imageIndex) {
+                try {
+                    AppState.setCurrentImage(slideNumber, imageIndex);
+                    this.renderImageGallery();
+                    CanvasRenderer.renderCurrentImage();
+                } catch (error) {
+                    ErrorHandler.log(error, 'UI.selectImage');
+                }
+            }
+
+            static updateCurrentInfo() {
+                try {
+                    const info = document.getElementById('current-info');
+                    if (!info) return;
+
+                    const currentImage = AppState.getCurrentImage();
+                    if (!currentImage) {
+                        info.textContent = 'No image selected';
+                        return;
+                    }
+
+                    info.innerHTML = `
+                        <strong>Slide ${AppState.currentSlide}</strong> • 
+                        Image ${AppState.currentImageIndex + 1} • 
+                        Size: ${currentImage.img.width}x${currentImage.img.height}
+                    `;
+                } catch (error) {
+                    ErrorHandler.log(error, 'UI.updateCurrentInfo');
+                }
+            }
+
+            static renderTextLayers() {
+                try {
+                    const container = document.getElementById('text-layers');
+                    if (!container) return;
+
+                    if (AppState.textLayers.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500 text-center py-4">No text layers added</p>';
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    AppState.textLayers.forEach((layer, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'bg-gray-700 p-3 rounded-lg flex justify-between items-center';
+                        
+                        const preview = layer.text.length > 20 ? layer.text.substring(0, 20) + '...' : layer.text;
+                        div.innerHTML = `
+                            <span class="text-sm">${preview}</span>
+                            <button class="btn-secondary text-red-400" onclick="TextController.removeLayer(${index})">Remove</button>
+                        `;
+                        
+                        container.appendChild(div);
+                    });
+                } catch (error) {
+                    ErrorHandler.log(error, 'UI.renderTextLayers');
+                }
+            }
+        }
+
+        // Text controller with TikTok presets
+        class TextController {
+            static presets = {
+                classic: {
+                    fontFamily: 'Montserrat',
+                    fontWeight: '600',
+                    fontSize: 60,
+                    textColor: '#000000',
+                    backgroundColor: '#ffffff',
+                    borderRadius: 32,
+                    lineHeight: 1.2
+                },
+                bold: {
+                    fontFamily: 'Montserrat',
+                    fontWeight: '700',
+                    fontSize: 70,
+                    textColor: '#ffffff',
+                    backgroundColor: '#000000',
+                    borderRadius: 0,
+                    lineHeight: 1.1
+                },
+                colorful: {
+                    fontFamily: 'Montserrat',
+                    fontWeight: '600',
+                    fontSize: 55,
+                    textColor: '#ffffff',
+                    backgroundColor: '#ff6b6b',
+                    borderRadius: 25,
+                    lineHeight: 1.3
+                }
             };
-        }
 
-        function populateControlsFromTextElement(element) {
-            elements.textContent.value = element.text;
-            elements.fontSizeSlider.value = element.size;
-            elements.lineHeightSlider.value = element.lineHeight;
-            elements.verticalSlider.value = element.y;
-            elements.textColor.value = element.color;
-            elements.outlineColor.value = element.outlineColor;
-            elements.outlineWidth.value = element.outlineWidth;
-            elements.fontFamily.value = element.fontFamily;
-            elements.fontWeight.value = element.fontWeight || '400';
-            elements.textAlign.value = element.align;
-            elements.textOpacity.value = element.opacity * 100;
-            updateSliderDisplays();
-        }
+            static applyPreset(presetName) {
+                try {
+                    const preset = this.presets[presetName];
+                    if (!preset) return;
 
-        function resetTextControls() {
-            elements.textContent.value = '';
-            elements.fontSizeSlider.value = 48;
-            elements.lineHeightSlider.value = 1.2;
-            elements.verticalSlider.value = 751;
-            elements.textColor.value = '#ffffff';
-            elements.outlineColor.value = '#000000';
-            elements.outlineWidth.value = 7;
-            elements.fontFamily.value = 'TikTok Sans'; // Changed from 'Poppins' to 'TikTok Sans'
-            elements.fontWeight.value = '400';
-            elements.textAlign.value = 'center';
-            elements.textOpacity.value = 100;
-            updateSliderDisplays();
-        }
+                    document.getElementById('font-family').value = preset.fontFamily;
+                    document.getElementById('font-weight').value = preset.fontWeight;
+                    document.getElementById('font-size').value = preset.fontSize;
+                    document.getElementById('text-color').value = preset.textColor;
+                    document.getElementById('bg-color').value = preset.backgroundColor;
+                    document.getElementById('border-radius').value = preset.borderRadius;
+                    document.getElementById('line-height').value = preset.lineHeight;
 
-        // Live editing mode functions
-        function enterLiveEditingMode(index = null) {
-            const imageData = getCurrentImageData();
-            if (!imageData) return;
-            
-            isLiveEditing = true;
-            selectedTextIndex = index;
-            
-            if (index !== null) {
-                populateControlsFromTextElement(imageData.textElements[index]);
-            }
-            
-            elements.textContent.classList.add('live');
-            elements.liveEditingIndicator.classList.remove('hidden');
-            elements.addTextBtn.classList.add('hidden');
-            elements.doneEditingBtn.classList.remove('hidden');
-            
-            elements.textContent.focus();
-            renderTextElementList();
-        }
-
-        function exitLiveEditingMode() {
-            isLiveEditing = false;
-            
-            const imageData = getCurrentImageData();
-            if (imageData && selectedTextIndex !== null && elements.textContent.value.trim()) {
-                imageData.textElements[selectedTextIndex] = readTextElementFromControls();
-            }
-            
-            selectedTextIndex = null;
-            
-            elements.textContent.classList.remove('live');
-            elements.liveEditingIndicator.classList.add('hidden');
-            elements.addTextBtn.classList.remove('hidden');
-            elements.doneEditingBtn.classList.add('hidden');
-            
-            resetTextControls();
-            renderTextElementList();
-            drawCurrentImage();
-            renderSlidesUI();
-        }
-
-        // Event listeners for live editing with debouncing
-        function setupLiveEditingListeners() {
-            const liveUpdateElements = [
-                elements.textContent, elements.fontSizeSlider, elements.lineHeightSlider, elements.verticalSlider,
-                elements.textColor, elements.outlineColor, elements.outlineWidth, elements.fontFamily, 
-                elements.fontWeight, elements.textAlign, elements.textOpacity
-            ];
-
-            const debouncedUpdate = debounce(() => {
-                if (isLiveEditing) {
-                    drawCurrentImage();
-                    updateSliderDisplays();
+                    this.updateSliderValues();
+                    ErrorHandler.showUserMessage(`Applied ${presetName} preset`, 'success');
+                } catch (error) {
+                    ErrorHandler.log(error, 'TextController.applyPreset');
                 }
-            }, 16); // ~60fps
+            }
 
-            liveUpdateElements.forEach(element => {
-                const eventType = element.type === 'range' || element.type === 'color' ? 'input' : 
-                                  element.tagName === 'SELECT' ? 'change' : 'input';
-                
-                element.addEventListener(eventType, debouncedUpdate);
-            });
+            static addTextLayer() {
+                try {
+                    const text = document.getElementById('text-content').value.trim();
+                    if (!text) {
+                        ErrorHandler.showUserMessage('Please enter some text', 'error');
+                        return;
+                    }
 
-            elements.textContent.addEventListener('input', debouncedUpdate);
+                    const textConfig = {
+                        text,
+                        x: this.getXPosition(),
+                        y: parseInt(document.getElementById('vertical-position').value),
+                        fontSize: parseInt(document.getElementById('font-size').value),
+                        fontFamily: document.getElementById('font-family').value,
+                        fontWeight: document.getElementById('font-weight').value,
+                        textColor: document.getElementById('text-color').value,
+                        backgroundColor: document.getElementById('bg-color').value,
+                        borderRadius: parseInt(document.getElementById('border-radius').value),
+                        align: document.getElementById('text-align').value,
+                        lineHeight: parseFloat(document.getElementById('line-height').value),
+                        id: Date.now()
+                    };
+
+                    AppState.textLayers.push(textConfig);
+                    CanvasRenderer.renderCurrentImage();
+                    UI.renderTextLayers();
+                    
+                    // Clear text input
+                    document.getElementById('text-content').value = '';
+                    ErrorHandler.showUserMessage('Text layer added successfully', 'success');
+                } catch (error) {
+                    ErrorHandler.log(error, 'TextController.addTextLayer');
+                }
+            }
+
+            static getXPosition() {
+                const align = document.getElementById('text-align').value;
+                switch (align) {
+                    case 'left': return 100;
+                    case 'right': return CanvasRenderer.CANVAS_WIDTH - 100;
+                    default: return CanvasRenderer.CANVAS_WIDTH / 2;
+                }
+            }
+
+            static removeLayer(index) {
+                try {
+                    if (index >= 0 && index < AppState.textLayers.length) {
+                        AppState.textLayers.splice(index, 1);
+                        CanvasRenderer.renderCurrentImage();
+                        UI.renderTextLayers();
+                        ErrorHandler.showUserMessage('Text layer removed', 'success');
+                    }
+                } catch (error) {
+                    ErrorHandler.log(error, 'TextController.removeLayer');
+                }
+            }
+
+            static updateSliderValues() {
+                try {
+                    document.getElementById('font-size-value').textContent = 
+                        document.getElementById('font-size').value + 'px';
+                    document.getElementById('line-height-value').textContent = 
+                        document.getElementById('line-height').value + 'x';
+                    document.getElementById('vertical-value').textContent = 
+                        document.getElementById('vertical-position').value + 'px';
+                    document.getElementById('radius-value').textContent = 
+                        document.getElementById('border-radius').value + 'px';
+                } catch (error) {
+                    ErrorHandler.log(error, 'TextController.updateSliderValues');
+                }
+            }
+
+            static setupEventListeners() {
+                try {
+                    // Preset buttons
+                    document.querySelectorAll('[data-preset]').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            this.applyPreset(btn.dataset.preset);
+                        });
+                    });
+
+                    // Position preset buttons
+                    document.querySelectorAll('[data-position]').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const position = btn.dataset.position;
+                            let value;
+                            switch (position) {
+                                case 'top': value = 300; break;
+                                case 'middle': value = 720; break;
+                                case 'bottom': value = 1140; break;
+                            }
+                            document.getElementById('vertical-position').value = value;
+                            this.updateSliderValues();
+                        });
+                    });
+
+                    // Slider updates
+                    ['font-size', 'line-height', 'vertical-position', 'border-radius'].forEach(id => {
+                        document.getElementById(id).addEventListener('input', this.updateSliderValues);
+                    });
+
+                    // Add text button
+                    document.getElementById('add-text').addEventListener('click', () => {
+                        this.addTextLayer();
+                    });
+
+                    // Preview button
+                    document.getElementById('preview-text').addEventListener('click', () => {
+                        CanvasRenderer.renderCurrentImage();
+                    });
+
+                } catch (error) {
+                    ErrorHandler.log(error, 'TextController.setupEventListeners');
+                }
+            }
         }
 
-        // Add text functionality
-        elements.addTextBtn.addEventListener('click', () => {
-            enterLiveEditingMode();
-        });
+        // Export functionality
+        class ExportController {
+            static async exportCurrentSlide() {
+                try {
+                    const currentImage = AppState.getCurrentImage();
+                    if (!currentImage) {
+                        ErrorHandler.showUserMessage('No image selected to export', 'error');
+                        return;
+                    }
 
-        elements.doneEditingBtn.addEventListener('click', () => {
-            const imageData = getCurrentImageData();
-            if (!imageData) return;
-            
-            const textData = readTextElementFromControls();
-            if (textData.text) {
-                if (selectedTextIndex !== null) {
-                    imageData.textElements[selectedTextIndex] = textData;
+                    const btn = document.getElementById('export-current');
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Exporting...';
+                    btn.disabled = true;
+
+                    // Render current state
+                    CanvasRenderer.renderCurrentImage();
+
+                    // Create download
+                    const dataUrl = AppState.canvas.toDataURL('image/jpeg', 0.95);
+                    const link = document.createElement('a');
+                    link.download = `slide_${AppState.currentSlide}_image_${AppState.currentImageIndex + 1}.jpg`;
+                    link.href = dataUrl;
+                    link.click();
+
+                    ErrorHandler.showUserMessage('Image exported successfully!', 'success');
+                } catch (error) {
+                    ErrorHandler.log(error, 'ExportController.exportCurrentSlide');
+                } finally {
+                    const btn = document.getElementById('export-current');
+                    btn.textContent = 'Export Current Slide';
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        // Navigation controller
+        class NavigationController {
+            static navigatePrevious() {
+                try {
+                    const slideImages = AppState.images.get(AppState.currentSlide);
+                    if (!slideImages) return;
+
+                    if (AppState.currentImageIndex > 0) {
+                        AppState.currentImageIndex--;
+                    } else {
+                        // Go to previous slide
+                        const slides = Array.from(AppState.images.keys()).sort((a, b) => a - b);
+                        const currentIndex = slides.indexOf(AppState.currentSlide);
+                        if (currentIndex > 0) {
+                            const prevSlide = slides[currentIndex - 1];
+                            const prevSlideImages = AppState.images.get(prevSlide);
+                            AppState.currentSlide = prevSlide;
+                            AppState.currentImageIndex = prevSlideImages.length - 1;
+                        }
+                    }
+
+                    AppState.textLayers = [];
+                    UI.renderSlideNavigation();
+                    UI.renderImageGallery();
+                    CanvasRenderer.renderCurrentImage();
+                } catch (error) {
+                    ErrorHandler.log(error, 'NavigationController.navigatePrevious');
+                }
+            }
+
+            static navigateNext() {
+                try {
+                    const slideImages = AppState.images.get(AppState.currentSlide);
+                    if (!slideImages) return;
+
+                    if (AppState.currentImageIndex < slideImages.length - 1) {
+                        AppState.currentImageIndex++;
+                    } else {
+                        // Go to next slide
+                        const slides = Array.from(AppState.images.keys()).sort((a, b) => a - b);
+                        const currentIndex = slides.indexOf(AppState.currentSlide);
+                        if (currentIndex < slides.length - 1) {
+                            const nextSlide = slides[currentIndex + 1];
+                            AppState.currentSlide = nextSlide;
+                            AppState.currentImageIndex = 0;
+                        }
+                    }
+
+                    AppState.textLayers = [];
+                    UI.renderSlideNavigation();
+                    UI.renderImageGallery();
+                    CanvasRenderer.renderCurrentImage();
+                } catch (error) {
+                    ErrorHandler.log(error, 'NavigationController.navigateNext');
+                }
+            }
+
+            static setupEventListeners() {
+                try {
+                    document.getElementById('prev-image').addEventListener('click', this.navigatePrevious);
+                    document.getElementById('next-image').addEventListener('click', this.navigateNext);
+
+                    // Keyboard navigation
+                    document.addEventListener('keydown', (e) => {
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                        
+                        if (e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            this.navigatePrevious();
+                        } else if (e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            this.navigateNext();
+                        }
+                    });
+                } catch (error) {
+                    ErrorHandler.log(error, 'NavigationController.setupEventListeners');
+                }
+            }
+        }
+
+        // Make TextController.removeLayer available globally
+        window.TextController = TextController;
+
+        // Main application initialization
+        async function initializeApp() {
+            try {
+                // Initialize app state
+                AppState.init();
+
+                // Setup event listeners
+                TextController.setupEventListeners();
+                NavigationController.setupEventListeners();
+
+                // Canvas background change handler
+                document.getElementById('canvas-bg').addEventListener('change', () => {
+                    CanvasRenderer.renderCurrentImage();
+                });
+
+                // Export handler
+                document.getElementById('export-current').addEventListener('click', () => {
+                    ExportController.exportCurrentSlide();
+                });
+
+                // Load all images
+                const success = await ImageLoader.loadAllImages();
+                if (success && AppState.images.size > 0) {
+                    // Select first slide and first image
+                    const firstSlide = Math.min(...AppState.images.keys());
+                    AppState.currentSlide = firstSlide;
+                    AppState.currentImageIndex = 0;
+
+                    // Render UI
+                    UI.renderSlideNavigation();
+                    UI.renderImageGallery();
+                    CanvasRenderer.renderCurrentImage();
+                    TextController.updateSliderValues();
                 } else {
-                    imageData.textElements.push(textData);
+                    throw new Error('Failed to load images');
                 }
-                showMessage('Text layer saved successfully', 'success');
-            }
-            exitLiveEditingMode();
-        });
 
-        function renderTextElementList() {
-            const list = document.getElementById('text-elements-list');
-            const imageData = getCurrentImageData();
-            
-            if (!imageData || imageData.textElements.length === 0) {
-                list.innerHTML = '<p class="text-gray-500 text-center py-6">No text layers for current image</p>';
-                return;
-            }
-            
-            list.innerHTML = '';
-            imageData.textElements.forEach((el, i) => {
-                const div = document.createElement('div');
-                div.className = `text-element-item ${
-                    (isLiveEditing && selectedTextIndex === i) ? 'live-editing' : ''
-                }`;
-                div.setAttribute('role', 'listitem');
-                
-                const previewText = el.text.length > 25 ? el.text.substring(0, 25) + '...' : el.text;
-                const lineCount = el.text.split('\n').length;
-                
-                div.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center flex-1">
-                            <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0" style="background:${el.color}; border: 2px solid ${el.outlineColor};" aria-hidden="true"></span>
-                            <div class="flex-1 min-w-0">
-                                <div class="truncate font-medium text-sm text-gray-200">${previewText}</div>
-                                <div class="text-xs text-gray-400">${el.size}px • ${lineCount} line${lineCount > 1 ? 's' : ''}</div>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 ml-3">
-                            <button class="edit-btn btn-secondary text-blue-400" data-index="${i}" aria-label="Edit text layer ${i + 1}">Edit</button>
-                            <button class="remove-btn btn-secondary text-red-400" data-index="${i}" aria-label="Remove text layer ${i + 1}">×</button>
-                        </div>
+            } catch (error) {
+                ErrorHandler.log(error, 'App Initialization');
+                // Show fallback UI
+                document.getElementById('image-gallery').innerHTML = `
+                    <div class="error-state">
+                        <div class="text-sm mb-4">Failed to load image gallery</div>
+                        <button class="retry-btn" onclick="location.reload()">Retry</button>
                     </div>
                 `;
-                
-                div.querySelector('.edit-btn').onclick = e => {
-                    e.preventDefault();
-                    const index = parseInt(e.target.getAttribute('data-index'));
-                    if (isLiveEditing) {
-                        exitLiveEditingMode();
-                    }
-                    setTimeout(() => enterLiveEditingMode(index), 100);
-                };
-                
-                div.querySelector('.remove-btn').onclick = e => {
-                    e.preventDefault();
-                    if (confirm('Delete this text layer?')) {
-                        const index = parseInt(e.target.getAttribute('data-index'));
-                        imageData.textElements.splice(index, 1);
-                        
-                        if (selectedTextIndex === index) {
-                            exitLiveEditingMode();
-                        } else if (selectedTextIndex > index) {
-                            selectedTextIndex--;
-                        }
-                        
-                        drawCurrentImage();
-                        renderTextElementList();
-                        renderSlidesUI();
-                        showMessage('Text layer removed', 'success');
-                    }
-                };
-                
-                list.appendChild(div);
-            });
-        }
-
-        function updateSliderDisplays() {
-            document.getElementById('font-size-value').textContent = `${elements.fontSizeSlider.value}px`;
-            document.getElementById('line-height-value').textContent = `${elements.lineHeightSlider.value}x`;
-            document.getElementById('vertical-value').textContent = `${elements.verticalSlider.value}px`;
-            document.getElementById('opacity-value').textContent = `${elements.textOpacity.value}%`;
-            document.getElementById('outline-value').textContent = `${elements.outlineWidth.value}px`;
-        }
-
-        // Navigation with keyboard support
-        function navigateToPrevImage() {
-            if (currentSlideIndex === null || !slides[currentSlideIndex]) return;
-            
-            const currentSlide = slides[currentSlideIndex];
-            if (currentImageIndex > 0) {
-                currentImageIndex--;
-            } else if (currentSlideIndex > 0) {
-                currentSlideIndex--;
-                currentImageIndex = slides[currentSlideIndex].images.length - 1;
-            }
-            
-            renderSlidesUI();
-            drawCurrentImage();
-            renderTextElementList();
-        }
-
-        function navigateToNextImage() {
-            if (currentSlideIndex === null || !slides[currentSlideIndex]) return;
-            
-            const currentSlide = slides[currentSlideIndex];
-            if (currentImageIndex < currentSlide.images.length - 1) {
-                currentImageIndex++;
-            } else if (currentSlideIndex < slides.length - 1) {
-                currentSlideIndex++;
-                currentImageIndex = 0;
-            }
-            
-            renderSlidesUI();
-            drawCurrentImage();
-            renderTextElementList();
-        }
-
-        document.getElementById('prev-image').addEventListener('click', navigateToPrevImage);
-        document.getElementById('next-image').addEventListener('click', navigateToNextImage);
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-                return; // Don't interfere with form inputs
-            }
-
-            switch(e.key) {
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    navigateToPrevImage();
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    navigateToNextImage();
-                    break;
-                case 'Escape':
-                    if (isLiveEditing) {
-                        exitLiveEditingMode();
-                    }
-                    break;
-            }
-        });
-
-        // File handling with enhanced drag and drop
-        function setupFileHandling() {
-            elements.fileDropArea.addEventListener('click', () => elements.fileInput.click());
-            elements.fileInput.addEventListener('change', e => loadImages(e.target.files));
-
-            // Enhanced drag and drop
-            let dragCounter = 0;
-
-            elements.fileDropArea.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                dragCounter++;
-                elements.fileDropArea.classList.add('drag-over');
-            });
-
-            elements.fileDropArea.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                dragCounter--;
-                if (dragCounter === 0) {
-                    elements.fileDropArea.classList.remove('drag-over');
-                }
-            });
-
-            elements.fileDropArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-            });
-
-            elements.fileDropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dragCounter = 0;
-                elements.fileDropArea.classList.remove('drag-over');
-                loadImages(e.dataTransfer.files);
-            });
-
-            // Keyboard support for file area
-            elements.fileDropArea.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    elements.fileInput.click();
-                }
-            });
-        }
-
-        // Export functionality with progress tracking
-        async function exportAllSlides() {
-            if (slides.length === 0) {
-                showMessage('Please create at least one slide first', 'error');
-                return;
-            }
-            
-            if (isExporting) return;
-            
-            if (isLiveEditing) {
-                exitLiveEditingMode();
-            }
-            
-            isExporting = true;
-            const exportBtn = document.getElementById('export-all');
-            const originalText = exportBtn.innerHTML;
-            exportBtn.innerHTML = `<span class="animate-pulse">Processing ${slides.length} slides...</span>`;
-            exportBtn.disabled = true;
-            
-            try {
-                const zip = new JSZip();
-                let processedSlides = 0;
-                
-                for (let slideIndex = 0; slideIndex < slides.length; slideIndex++) {
-                    const slide = slides[slideIndex];
-                    if (slide.images.length === 0) continue;
-                    
-                    const slideFolder = zip.folder(slide.name.replace(/[^a-zA-Z0-9]/g, '_'));
-                    
-                    for (let imgIndex = 0; imgIndex < slide.images.length; imgIndex++) {
-                        const imageData = slide.images[imgIndex];
-                        
-                        // Render image with dynamic sizing + text overlays
-                        drawImageWithAspectRatio(imageData.img);
-                        
-                        // Draw text elements for this specific image
-                        imageData.textElements.forEach(el => {
-                            if (!el.text) return;
-                            
-                            let xPos;
-                            if (el.align === 'left') xPos = 50;
-                            else if (el.align === 'right') xPos = canvas.width - 50;
-                            else xPos = canvas.width / 2;
-                            
-                            drawMultilineText(
-                                el.text, xPos, el.y, el.size, el.fontFamily,
-                                el.fontWeight, el.color, el.align, el.opacity,
-                                el.outlineColor, el.outlineWidth, el.lineHeight
-                            );
-                        });
-                        
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                        const base64Data = dataUrl.split(',')[1];
-                        const filename = `${imageData.filename.split('.')[0]}_edited.jpg`;
-                        slideFolder.file(filename, base64Data, { base64: true });
-                    }
-                    
-                    processedSlides++;
-                    exportBtn.innerHTML = `<span class="animate-pulse">Processing slide ${processedSlides}/${slides.length}...</span>`;
-                }
-                
-                exportBtn.innerHTML = `<span class="animate-pulse">Creating download...</span>`;
-                
-                const blob = await zip.generateAsync({ 
-                    type: 'blob',
-                    compression: 'DEFLATE',
-                    compressionOptions: { level: 6 }
-                });
-                
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `DailyDrop_Slides_Export_${new Date().toISOString().split('T')[0]}.zip`;
-                a.click();
-                
-                // Clean up object URL
-                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-                
-                showMessage(`Successfully exported ${processedSlides} slides!`, 'success');
-                
-            } catch (error) {
-                console.error('Export error:', error);
-                showMessage('Export failed. Please try again.', 'error');
             } finally {
-                isExporting = false;
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-                drawCurrentImage();
-            }
-        }
-
-        document.getElementById('export-all').addEventListener('click', exportAllSlides);
-
-        // Initialize application
-        function initializeApp() {
-            try {
-                initializeCanvas();
-                setupLiveEditingListeners();
-                setupFileHandling();
-                updateSliderDisplays();
-                
                 // Hide loading screen
                 setTimeout(() => {
-                    elements.loadingScreen.classList.add('hidden');
+                    const loadingScreen = document.getElementById('loading-screen');
+                    loadingScreen.classList.add('hidden');
                     setTimeout(() => {
-                        elements.loadingScreen.style.display = 'none';
+                        loadingScreen.style.display = 'none';
                     }, 500);
                 }, 1000);
-                
-                showMessage('DailyDrop Slide Editor loaded successfully!', 'success');
-            } catch (error) {
-                console.error('App initialization error:', error);
-                showMessage('Failed to initialize application. Please refresh the page.', 'error');
             }
         }
 
-        // Start the application when DOM is ready
+        // Start the application
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {
